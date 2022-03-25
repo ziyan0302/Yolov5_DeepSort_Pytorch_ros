@@ -1,0 +1,8 @@
+*.avi
+*.jpg
+*.npy
+*.p
+runs/
+*.pt
+tensorrt_demos/
+

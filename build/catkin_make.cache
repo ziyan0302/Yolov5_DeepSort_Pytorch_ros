@@ -1,0 +1,2 @@
+detection_only
+-DCATKIN_DEVEL_PREFIX=/home/ziyan/det2track/devel -DCMAKE_INSTALL_PREFIX=/home/ziyan/det2track/install -G Unix Makefiles

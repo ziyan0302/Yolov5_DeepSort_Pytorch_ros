@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<launch>
+    <arg name="yolo_model" default="yolov5m.pt" />
+    <arg name="deep_sort_model" default="osnet_x0_25" />
+    <arg name="source" default="0" />
+    <arg name="output" default="inference/output" />
+    <arg name="imgsz" default="[640]" />
+    <arg name="conf-thres" default="0.3" />
+    <arg name="iou-thres" default="0.5" />
+    <arg name="fourcc" default="mp4v" />
+    <arg name="device" default="" />
+    <arg name="show-vid" default="False" />
+    <arg name="save-vid" default="False" />
+    <arg name="save-txt" default="False" />
+    <arg name="classes" default="" />
+    <arg name="agnostic-nms" default="False" />
+    <arg name="augment" default="False" />
+    <arg name="config_deepsort" default="/home/ziyan/det2track/Yolov5_DeepSort_Pytorch/deep_sort/configs/deep_sort.yaml" />
+    <arg name="max-det" default="1000" />
+    <arg name="project" default="/home/ziyan/det2track/src/detection_only/src/runs/ros_track" />
+    <arg name="name" default="exp" />
+
+
+    <node name="tracking" pkg="detection_only" type="ros_test.py" output="screen">
+        <rosparam param="yolo_model" subst_value="True">"$(arg yolo_model)"</rosparam>
+        <rosparam param="deep_sort_model" subst_value="True">"$(arg deep_sort_model)"</rosparam>
+        <rosparam param="source" subst_value="True">"$(arg source)"</rosparam>
+        <rosparam param="output" subst_value="True">"$(arg output)"</rosparam>
+        <rosparam param="imgsz" subst_value="True">"$(arg imgsz)"</rosparam>
+        <rosparam param="conf-thres" subst_value="True">"$(arg conf-thres)"</rosparam>
+        <rosparam param="iou-thres" subst_value="True">"$(arg iou-thres)"</rosparam>
+        <rosparam param="fourcc" subst_value="True">"$(arg fourcc)"</rosparam>
+        <rosparam param="device" subst_value="True">"$(arg device)"</rosparam>
+        <rosparam param="show-vid" subst_value="True">"$(arg show-vid)"</rosparam>
+        <rosparam param="classes" subst_value="True">"$(arg classes)"</rosparam>
+        <rosparam param="agnostic-nms" subst_value="True">"$(arg agnostic-nms)"</rosparam>
+        <rosparam param="config_deepsort" subst_value="True">"$(arg config_deepsort)"</rosparam>
+        <rosparam param="augment" subst_value="True">"$(arg augment)"</rosparam>
+        <rosparam param="max-det" subst_value="True">"$(arg max-det)"</rosparam>
+        <rosparam param="project" subst_value="True">"$(arg project)"</rosparam>
+        <rosparam param="name" subst_value="True">"$(arg name)"</rosparam>
+        
+
+    </node>
+
+
+</launch>
