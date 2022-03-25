@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ziyan/det2track/src
+CMAKE_SOURCE_DIR = /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ziyan/det2track/build
+CMAKE_BINARY_DIR = /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build
 
 # Utility rule file for detection_only_genpy.
 
@@ -63,10 +63,10 @@ detection_only/CMakeFiles/detection_only_genpy.dir/build: detection_only_genpy
 .PHONY : detection_only/CMakeFiles/detection_only_genpy.dir/build
 
 detection_only/CMakeFiles/detection_only_genpy.dir/clean:
-	cd /home/ziyan/det2track/build/detection_only && $(CMAKE_COMMAND) -P CMakeFiles/detection_only_genpy.dir/cmake_clean.cmake
+	cd /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only && $(CMAKE_COMMAND) -P CMakeFiles/detection_only_genpy.dir/cmake_clean.cmake
 .PHONY : detection_only/CMakeFiles/detection_only_genpy.dir/clean
 
 detection_only/CMakeFiles/detection_only_genpy.dir/depend:
-	cd /home/ziyan/det2track/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ziyan/det2track/src /home/ziyan/det2track/src/detection_only /home/ziyan/det2track/build /home/ziyan/det2track/build/detection_only /home/ziyan/det2track/build/detection_only/CMakeFiles/detection_only_genpy.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only/CMakeFiles/detection_only_genpy.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : detection_only/CMakeFiles/detection_only_genpy.dir/depend
 

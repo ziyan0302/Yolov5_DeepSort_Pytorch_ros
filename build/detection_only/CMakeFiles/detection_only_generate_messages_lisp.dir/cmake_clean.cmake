@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/ziyan/det2track/devel/share/common-lisp/ros/detection_only/msg/Bbox6Array.lisp"
-  "/home/ziyan/det2track/devel/share/common-lisp/ros/detection_only/msg/Bbox_6.lisp"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/common-lisp/ros/detection_only/msg/Bbox6Array.lisp"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/common-lisp/ros/detection_only/msg/Bbox_6.lisp"
   "CMakeFiles/detection_only_generate_messages_lisp"
 )
 

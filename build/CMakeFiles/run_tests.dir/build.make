@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ziyan/det2track/src
+CMAKE_SOURCE_DIR = /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ziyan/det2track/build
+CMAKE_BINARY_DIR = /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build
 
 # Utility rule file for run_tests.
 
@@ -67,6 +67,6 @@ CMakeFiles/run_tests.dir/clean:
 .PHONY : CMakeFiles/run_tests.dir/clean
 
 CMakeFiles/run_tests.dir/depend:
-	cd /home/ziyan/det2track/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ziyan/det2track/src /home/ziyan/det2track/src /home/ziyan/det2track/build /home/ziyan/det2track/build /home/ziyan/det2track/build/CMakeFiles/run_tests.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build /home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/CMakeFiles/run_tests.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/run_tests.dir/depend
 

@@ -1,8 +1,8 @@
-# Install script for directory: /home/ziyan/det2track/src/detection_only
+# Install script for directory: /home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/home/ziyan/det2track/install")
+  set(CMAKE_INSTALL_PREFIX "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/install")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -39,55 +39,55 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only/msg" TYPE FILE FILES
-    "/home/ziyan/det2track/src/detection_only/msg/Bbox_6.msg"
-    "/home/ziyan/det2track/src/detection_only/msg/Bbox6Array.msg"
+    "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
+    "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only/cmake" TYPE FILE FILES "/home/ziyan/det2track/build/detection_only/catkin_generated/installspace/detection_only-msg-paths.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only/cmake" TYPE FILE FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only/catkin_generated/installspace/detection_only-msg-paths.cmake")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/home/ziyan/det2track/devel/include/detection_only")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/include/detection_only")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/roseus/ros" TYPE DIRECTORY FILES "/home/ziyan/det2track/devel/share/roseus/ros/detection_only")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/roseus/ros" TYPE DIRECTORY FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/roseus/ros/detection_only")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/common-lisp/ros" TYPE DIRECTORY FILES "/home/ziyan/det2track/devel/share/common-lisp/ros/detection_only")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/common-lisp/ros" TYPE DIRECTORY FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/common-lisp/ros/detection_only")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/gennodejs/ros" TYPE DIRECTORY FILES "/home/ziyan/det2track/devel/share/gennodejs/ros/detection_only")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/gennodejs/ros" TYPE DIRECTORY FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/gennodejs/ros/detection_only")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  execute_process(COMMAND "/usr/bin/python3" -m compileall "/home/ziyan/det2track/devel/lib/python3/dist-packages/detection_only")
+  execute_process(COMMAND "/usr/bin/python3" -m compileall "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/lib/python3/dist-packages/detection_only")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages" TYPE DIRECTORY FILES "/home/ziyan/det2track/devel/lib/python3/dist-packages/detection_only")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages" TYPE DIRECTORY FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/lib/python3/dist-packages/detection_only")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ziyan/det2track/build/detection_only/catkin_generated/installspace/detection_only.pc")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only/catkin_generated/installspace/detection_only.pc")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only/cmake" TYPE FILE FILES "/home/ziyan/det2track/build/detection_only/catkin_generated/installspace/detection_only-msg-extras.cmake")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only/cmake" TYPE FILE FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only/catkin_generated/installspace/detection_only-msg-extras.cmake")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only/cmake" TYPE FILE FILES
-    "/home/ziyan/det2track/build/detection_only/catkin_generated/installspace/detection_onlyConfig.cmake"
-    "/home/ziyan/det2track/build/detection_only/catkin_generated/installspace/detection_onlyConfig-version.cmake"
+    "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only/catkin_generated/installspace/detection_onlyConfig.cmake"
+    "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/detection_only/catkin_generated/installspace/detection_onlyConfig-version.cmake"
     )
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only" TYPE FILE FILES "/home/ziyan/det2track/src/detection_only/package.xml")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/detection_only" TYPE FILE FILES "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/package.xml")
 endif()
 

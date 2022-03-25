@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
-  "/home/ziyan/det2track/devel/share/roseus/ros/detection_only/manifest.l"
-  "/home/ziyan/det2track/devel/share/roseus/ros/detection_only/msg/Bbox6Array.l"
-  "/home/ziyan/det2track/devel/share/roseus/ros/detection_only/msg/Bbox_6.l"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/roseus/ros/detection_only/manifest.l"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/roseus/ros/detection_only/msg/Bbox6Array.l"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/share/roseus/ros/detection_only/msg/Bbox_6.l"
   "CMakeFiles/detection_only_generate_messages_eus"
 )
 

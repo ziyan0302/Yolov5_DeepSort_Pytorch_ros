@@ -1,4 +1,4 @@
-prefix=/home/ziyan/det2track/install
+prefix=/home/ziyan/Yolov5_DeepSort_Pytorch_ros/install
 
 Name: detection_only
 Description: Description of detection_only
