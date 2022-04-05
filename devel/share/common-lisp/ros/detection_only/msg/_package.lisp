@@ -5,5 +5,7 @@
    "BBOX6ARRAY"
    "<BBOX_6>"
    "BBOX_6"
+   "<IMAGE>"
+   "IMAGE"
   ))
 

@@ -1,8 +1,8 @@
 # generated from genmsg/cmake/pkg-genmsg.cmake.em
 
-message(STATUS "detection_only: 2 messages, 0 services")
+message(STATUS "detection_only: 3 messages, 0 services")
 
-set(MSG_I_FLAGS "-Idetection_only:/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg;-Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg")
+set(MSG_I_FLAGS "-Idetection_only:/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg;-Istd_msgs:/opt/ros/noetic/share/std_msgs/cmake/../msg;-Isensor_msgs:/opt/ros/noetic/share/sensor_msgs/cmake/../msg;-Igeometry_msgs:/opt/ros/noetic/share/geometry_msgs/cmake/../msg")
 
 # Find all generators
 find_package(gencpp REQUIRED)
@@ -24,7 +24,12 @@ add_custom_target(_detection_only_generate_messages_check_deps_${_filename}
 
 get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" NAME_WE)
 add_custom_target(_detection_only_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "detection_only" "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" "detection_only/Bbox_6"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "detection_only" "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" "detection_only/Image:detection_only/Bbox_6:std_msgs/Header"
+)
+
+get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" NAME_WE)
+add_custom_target(_detection_only_generate_messages_check_deps_${_filename}
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "detection_only" "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" "std_msgs/Header"
 )
 
 #
@@ -42,7 +47,13 @@ _generate_msg_cpp(detection_only
 _generate_msg_cpp(detection_only
   "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
   "${MSG_I_FLAGS}"
-  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/detection_only
+)
+_generate_msg_cpp(detection_only
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+  "${MSG_I_FLAGS}"
+  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/detection_only
 )
 
@@ -64,6 +75,8 @@ get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/de
 add_dependencies(detection_only_generate_messages_cpp _detection_only_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" NAME_WE)
 add_dependencies(detection_only_generate_messages_cpp _detection_only_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" NAME_WE)
+add_dependencies(detection_only_generate_messages_cpp _detection_only_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(detection_only_gencpp)
@@ -83,7 +96,13 @@ _generate_msg_eus(detection_only
 _generate_msg_eus(detection_only
   "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
   "${MSG_I_FLAGS}"
-  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/detection_only
+)
+_generate_msg_eus(detection_only
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+  "${MSG_I_FLAGS}"
+  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/detection_only
 )
 
@@ -105,6 +124,8 @@ get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/de
 add_dependencies(detection_only_generate_messages_eus _detection_only_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" NAME_WE)
 add_dependencies(detection_only_generate_messages_eus _detection_only_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" NAME_WE)
+add_dependencies(detection_only_generate_messages_eus _detection_only_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(detection_only_geneus)
@@ -124,7 +145,13 @@ _generate_msg_lisp(detection_only
 _generate_msg_lisp(detection_only
   "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
   "${MSG_I_FLAGS}"
-  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/detection_only
+)
+_generate_msg_lisp(detection_only
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+  "${MSG_I_FLAGS}"
+  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/detection_only
 )
 
@@ -146,6 +173,8 @@ get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/de
 add_dependencies(detection_only_generate_messages_lisp _detection_only_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" NAME_WE)
 add_dependencies(detection_only_generate_messages_lisp _detection_only_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" NAME_WE)
+add_dependencies(detection_only_generate_messages_lisp _detection_only_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(detection_only_genlisp)
@@ -165,7 +194,13 @@ _generate_msg_nodejs(detection_only
 _generate_msg_nodejs(detection_only
   "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
   "${MSG_I_FLAGS}"
-  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/detection_only
+)
+_generate_msg_nodejs(detection_only
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+  "${MSG_I_FLAGS}"
+  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/detection_only
 )
 
@@ -187,6 +222,8 @@ get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/de
 add_dependencies(detection_only_generate_messages_nodejs _detection_only_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" NAME_WE)
 add_dependencies(detection_only_generate_messages_nodejs _detection_only_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" NAME_WE)
+add_dependencies(detection_only_generate_messages_nodejs _detection_only_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(detection_only_gennodejs)
@@ -206,7 +243,13 @@ _generate_msg_py(detection_only
 _generate_msg_py(detection_only
   "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
   "${MSG_I_FLAGS}"
-  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
+  ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/detection_only
+)
+_generate_msg_py(detection_only
+  "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+  "${MSG_I_FLAGS}"
+  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/detection_only
 )
 
@@ -228,6 +271,8 @@ get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/de
 add_dependencies(detection_only_generate_messages_py _detection_only_generate_messages_check_deps_${_filename})
 get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg" NAME_WE)
 add_dependencies(detection_only_generate_messages_py _detection_only_generate_messages_check_deps_${_filename})
+get_filename_component(_filename "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg" NAME_WE)
+add_dependencies(detection_only_generate_messages_py _detection_only_generate_messages_check_deps_${_filename})
 
 # target for backward compatibility
 add_custom_target(detection_only_genpy)
@@ -248,6 +293,9 @@ endif()
 if(TARGET std_msgs_generate_messages_cpp)
   add_dependencies(detection_only_generate_messages_cpp std_msgs_generate_messages_cpp)
 endif()
+if(TARGET sensor_msgs_generate_messages_cpp)
+  add_dependencies(detection_only_generate_messages_cpp sensor_msgs_generate_messages_cpp)
+endif()
 
 if(geneus_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/detection_only)
   # install generated code
@@ -258,6 +306,9 @@ if(geneus_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/de
 endif()
 if(TARGET std_msgs_generate_messages_eus)
   add_dependencies(detection_only_generate_messages_eus std_msgs_generate_messages_eus)
+endif()
+if(TARGET sensor_msgs_generate_messages_eus)
+  add_dependencies(detection_only_generate_messages_eus sensor_msgs_generate_messages_eus)
 endif()
 
 if(genlisp_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/detection_only)
@@ -270,6 +321,9 @@ endif()
 if(TARGET std_msgs_generate_messages_lisp)
   add_dependencies(detection_only_generate_messages_lisp std_msgs_generate_messages_lisp)
 endif()
+if(TARGET sensor_msgs_generate_messages_lisp)
+  add_dependencies(detection_only_generate_messages_lisp sensor_msgs_generate_messages_lisp)
+endif()
 
 if(gennodejs_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/detection_only)
   # install generated code
@@ -280,6 +334,9 @@ if(gennodejs_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_D
 endif()
 if(TARGET std_msgs_generate_messages_nodejs)
   add_dependencies(detection_only_generate_messages_nodejs std_msgs_generate_messages_nodejs)
+endif()
+if(TARGET sensor_msgs_generate_messages_nodejs)
+  add_dependencies(detection_only_generate_messages_nodejs sensor_msgs_generate_messages_nodejs)
 endif()
 
 if(genpy_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/detection_only)
@@ -292,4 +349,7 @@ if(genpy_INSTALL_DIR AND EXISTS ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/dete
 endif()
 if(TARGET std_msgs_generate_messages_py)
   add_dependencies(detection_only_generate_messages_py std_msgs_generate_messages_py)
+endif()
+if(TARGET sensor_msgs_generate_messages_py)
+  add_dependencies(detection_only_generate_messages_py sensor_msgs_generate_messages_py)
 endif()

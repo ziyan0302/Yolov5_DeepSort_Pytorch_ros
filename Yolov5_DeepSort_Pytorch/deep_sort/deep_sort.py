@@ -43,7 +43,6 @@ class DeepSort(object):
         # update tracker
         self.tracker.predict()
         self.tracker.update(detections, classes)
-
         # output bbox identities
         outputs = []
         for track in self.tracker.tracks:
@@ -60,6 +59,7 @@ class DeepSort(object):
             outputs.append(np.array([x1, y1, x2, y2, track_id, class_id], dtype=np.int))
         if len(outputs) > 0:
             outputs = np.stack(outputs, axis=0)
+        # pdb.set_trace()
         return outputs
 
     """

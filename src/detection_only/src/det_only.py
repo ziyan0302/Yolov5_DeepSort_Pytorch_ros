@@ -33,6 +33,9 @@ from deep_sort.deep_sort import DeepSort
 
 import rospy
 from detection_only.msg import Bbox_6, Bbox6Array
+# from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import numpy as np
 import pdb
 import json
 
@@ -44,6 +47,7 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 
 def detect(freq, opt):
+    global br
     out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, project, name, exist_ok= \
         opt.output, opt.source, opt.yolo_model, opt.deep_sort_model, opt.show_vid, opt.save_vid, \
         opt.save_txt, opt.imgsz, opt.evaluate, opt.half, opt.project, opt.name, opt.exist_ok
@@ -157,122 +161,18 @@ def detect(freq, opt):
             bbox.cls = det_results[0][i][5]
 
             data.bboxes.append(bbox)
-        
+        # data.image = br.cv2_to_imgmsg(np.squeeze(img.cpu().numpy()))
+        data.image = br.cv2_to_imgmsg(im0s)
+        print(det_results)
         det_pub.publish(data)
-        print("publish!!!!!!")
-
-        # Process detections
-        """ 
-        for i, det in enumerate(pred):  # detections per image # since len(pred) = 1, det = pred
-            seen += 1
-            if webcam:  # batch_size >= 1
-                p, im0, _ = path[i], im0s[i].copy(), dataset.count
-                s += f'{i}: '
-            else:
-                p, im0, _ = path, im0s.copy(), getattr(dataset, 'frame', 0)
-
-            p = Path(p)  # to Path
-            save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
-            s += '%gx%g ' % img.shape[2:]  # print string
-
-            annotator = Annotator(im0, line_width=2, pil=not ascii)
-
-            if det is not None and len(det):
-                # Rescale boxes from img_size to im0 size
-                det[:, :4] = scale_coords(
-                    img.shape[2:], det[:, :4], im0.shape).round()
+        pdb.set_trace()
+        # print("detetion publish!!!!!!")
+        # pdb.set_trace()
+        # img_pub.publish(br.cv2_to_imgmsg(img.cpu().numpy()))
+        # print("img publish!!")
 
 
 
-                # Print results
-                for c in det[:, -1].unique():
-                    n = (det[:, -1] == c).sum()  # detections per class
-                    s += f"{n} {names[int(c)]}{'s' * (n > 1)}, "  # add to string
-
-                xywhs = xyxy2xywh(det[:, 0:4])
-                # (12,4)
-                confs = det[:, 4]
-                # (12,1)
-                clss = det[:, 5]
-                # (12,1)
-
-                # pass detections to deepsort
-                t4 = time_sync()
-                # pdb.set_trace()
-                outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
-                t5 = time_sync()
-                dt[3] += t5 - t4
-
-                # draw boxes for visualization
-                if len(outputs) > 0:
-                    for j, (output, conf) in enumerate(zip(outputs, confs)):
-
-                        bboxes = output[0:4]
-                        id = output[4]
-                        cls = output[5]
-
-                        c = int(cls)  # integer class
-                        label = f'{id} {names[c]} {conf:.2f}'
-                        annotator.box_label(bboxes, label, color=colors(c, True))
-
-                        if save_txt:
-                            # to MOT format
-                            bbox_left = output[0]
-                            bbox_top = output[1]
-                            bbox_w = output[2] - output[0]
-                            bbox_h = output[3] - output[1]
-                            # Write MOT compliant results to file
-                            with open(txt_path, 'a') as f:
-                                f.write(('%g ' * 10 + '\n') % (frame_idx + 1, id, bbox_left,  # MOT format
-                                                               bbox_top, bbox_w, bbox_h, -1, -1, -1, -1))
-
-                LOGGER.info(f'{s}Done. YOLO:({t3 - t2:.3f}s), DeepSort:({t5 - t4:.3f}s)')
-
-            else:
-                deepsort.increment_ages()
-                LOGGER.info('No detections')
-
-            # Stream results
-            im0 = annotator.result()
-            if show_vid:
-                cv2.imshow(str(p), im0)
-                if cv2.waitKey(1) == ord('q'):  # q to quit
-                    raise StopIteration
-
-            # Save results (image with detections)
-            if save_vid:
-                if vid_path != save_path:  # new video
-                    vid_path = save_path
-                    pdb.set_trace()
-                    if isinstance(vid_writer, cv2.VideoWriter):
-                        vid_writer.release()  # release previous video writer
-                    if vid_cap:  # video
-                        fps = vid_cap.get(cv2.CAP_PROP_FPS)
-                        w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-                        h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                    else:  # stream
-                        fps, w, h = 30, im0.shape[1], im0.shape[0]
-
-                    vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
-                vid_writer.write(im0)
- """
-    
-    # Serializing json 
-    # pdb.set_trace()
-    # json_object = json.dumps(det_data, indent = 4)
-    # Writing to sample.json
-    # with open("sample.json", "w") as outfile:
-    #     outfile.write(json_object)
-    
-    """ # Print results
-    t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
-    LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS, %.1fms deep sort update \
-        per image at shape {(1, 3, *imgsz)}' % t)
-    if save_txt or save_vid:
-        print('Results saved to %s' % save_path)
-        if platform == 'darwin':  # MacOS
-            os.system('open ' + save_path)
- """
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -312,17 +212,23 @@ if __name__ == '__main__':
         rospy.init_node('detection_node', anonymous=False)
         last_t = rospy.Time.now().to_sec()
         det_pub = rospy.Publisher('det_result', Bbox6Array, queue_size=1)
+        # img_pub = rospy.Publisher('raw_img', Image, queue_size=1)
         freq = 0.1
+        call = 0
         timer = rospy.timer.Rate(freq)
+        global br
+        br = CvBridge()
         
         while not rospy.is_shutdown():
+            call += 1
+            print("call: ",call)
+            print(rospy.is_shutdown())
             with torch.no_grad():
                 detect(freq, opt)
-            # timer.sleep()
-            # this_t = rospy.Time.now().to_sec()
-            # if this_t - last_t > 1:
-            #     rospy.loginfo("Still Alive")
-            #     last_t = this_t
+            if call > 0:
+                rospy.signal_shutdown()
+
+
     except RuntimeError:
         rospy.logfatal("get runtime error")
     except rospy.ROSInterruptException:

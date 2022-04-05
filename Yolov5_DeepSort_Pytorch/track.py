@@ -42,9 +42,11 @@ def detect(opt):
     out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, project, name, exist_ok= \
         opt.output, opt.source, opt.yolo_model, opt.deep_sort_model, opt.show_vid, opt.save_vid, \
         opt.save_txt, opt.imgsz, opt.evaluate, opt.half, opt.project, opt.name, opt.exist_ok
+    save_img = opt.save_img
     webcam = source == '0' or source.startswith(
         'rtsp') or source.startswith('http') or source.endswith('.txt')
-
+    # webcam = True
+    # pdb.set_trace()
     device = select_device(opt.device)
     # initialize deepsort
     cfg = get_config()
@@ -99,6 +101,7 @@ def detect(opt):
         dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt and not jit)
         bs = 1  # batch_size
     vid_path, vid_writer = [None] * bs, [None] * bs
+    # pdb.set_trace()
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -111,6 +114,10 @@ def detect(opt):
         model(torch.zeros(1, 3, *imgsz).to(device).type_as(next(model.model.parameters())))  # warmup
     dt, seen = [0.0, 0.0, 0.0, 0.0], 0
     for frame_idx, (path, img, im0s, vid_cap, s) in enumerate(dataset):
+        print("\033[92mdataset\033[0m")
+        print("vid_cap:",vid_cap)
+        print("s:",s)
+        print("\n")
         t1 = time_sync()
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -144,6 +151,7 @@ def detect(opt):
                 p, im0, _ = path, im0s.copy(), getattr(dataset, 'frame', 0)
 
             p = Path(p)  # to Path
+            pdb.set_trace()
             save_path = str(save_dir / p.name)  # im.jpg, vid.mp4, ...
             s += '%gx%g ' % img.shape[2:]  # print string
 
@@ -153,7 +161,6 @@ def detect(opt):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(
                     img.shape[2:], det[:, :4], im0.shape).round()
-
 
 
                 # Print results
@@ -170,8 +177,13 @@ def detect(opt):
 
                 # pass detections to deepsort
                 t4 = time_sync()
-                # pdb.set_trace()
                 outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
+                # pdb.set_trace()
+                print("\033[92moutputs\033[0m")
+                if type(outputs) != list:
+                    print(outputs.shape)
+                else:
+                    print(len(outputs))
                 t5 = time_sync()
                 dt[3] += t5 - t4
 
@@ -210,12 +222,13 @@ def detect(opt):
                 cv2.imshow(str(p), im0)
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
+                time.sleep(2)
 
             # Save results (image with detections)
             if save_vid:
                 if vid_path != save_path:  # new video
                     vid_path = save_path
-                    pdb.set_trace()
+                    # pdb.set_trace()
                     if isinstance(vid_writer, cv2.VideoWriter):
                         vid_writer.release()  # release previous video writer
                     if vid_cap:  # video
@@ -227,6 +240,10 @@ def detect(opt):
 
                     vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                 vid_writer.write(im0)
+            if save_img: 
+                # /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less/frame0250.jpg
+                index = str(p).index(".")
+                cv2.imwrite(os.path.join(save_dir , '{}.jpg'.format(str(p)[index-4:index])), im0)
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
@@ -251,6 +268,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--show-vid', action='store_true', help='display tracking video results')
     parser.add_argument('--save-vid', action='store_true', help='save video tracking results')
+    parser.add_argument('--save-img', action='store_true', help='save img tracking results(for img input)')
     parser.add_argument('--save-txt', action='store_true', help='save MOT compliant results to *.txt')
     # class 0 is person, 1 is bycicle, 2 is car... 79 is oven
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 16 17')

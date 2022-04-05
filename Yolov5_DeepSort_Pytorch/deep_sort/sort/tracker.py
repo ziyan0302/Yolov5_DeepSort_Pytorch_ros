@@ -5,6 +5,7 @@ from . import kalman_filter
 from . import linear_assignment
 from . import iou_matching
 from .track import Track
+import pdb
 
 
 class Tracker:
@@ -71,7 +72,7 @@ class Tracker:
         # Run matching cascade.
         matches, unmatched_tracks, unmatched_detections = \
             self._match(detections)
-
+        # pdb.set_trace()
         # Update track set.
         for track_idx, detection_idx in matches:
             self.tracks[track_idx].update(

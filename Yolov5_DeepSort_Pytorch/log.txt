@@ -1,0 +1,37 @@
+/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/deep_sort/deep/reid/torchreid/metrics/rank.py:11: UserWarning: Cython evaluation (very fast so highly recommended) is unavailable, now use python evaluation.
+  warnings.warn(
+YOLOv5 🚀 2022-3-17 torch 1.10.2+cu113 CUDA:0 (NVIDIA GeForce RTX 2080 Ti, 11011MiB)
+
+YOLOv5 🚀 2022-3-17 torch 1.10.2+cu113 CUDA:0 (NVIDIA GeForce RTX 2080 Ti, 11011MiB)
+
+Fusing layers... 
+Model Summary: 290 layers, 21172173 parameters, 0 gradients
+image 1/14 /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less/frame0237.jpg: 384x640 5 persons, 9 cars, 1 fire hydrant, Done. YOLO:(0.015s), DeepSort:(0.034s)
+Successfully loaded imagenet pretrained weights from "/home/ziyan/.cache/torch/checkpoints/osnet_x0_25_imagenet.pth"
+** The following layers are discarded due to unmatched keys or layer size: ['classifier.weight', 'classifier.bias']
+Model: osnet_x0_25
+- params: 203,568
+- flops: 82,316,000
+[92mdataset[0m
+vid_cap: None
+s: image 1/14 /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less/frame0237.jpg: 
+
+
+[92moutputs[0m
+0
+> /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/track.py(242)detect()
+-> if save_img:
+(Pdb) *** SyntaxError: invalid syntax
+(Pdb) *** SyntaxError: invalid syntax
+(Pdb) Traceback (most recent call last):
+  File "track.py", line 287, in <module>
+    detect(opt)
+  File "track.py", line 242, in detect
+    if save_img: 
+  File "track.py", line 242, in detect
+    if save_img: 
+  File "/usr/lib/python3.8/bdb.py", line 88, in trace_dispatch
+    return self.dispatch_line(frame)
+  File "/usr/lib/python3.8/bdb.py", line 113, in dispatch_line
+    if self.quitting: raise BdbQuit
+bdb.BdbQuit
