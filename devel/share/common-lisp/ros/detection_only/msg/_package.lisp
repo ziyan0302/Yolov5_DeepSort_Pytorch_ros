@@ -7,5 +7,9 @@
    "BBOX_6"
    "<IMAGE>"
    "IMAGE"
+   "<TRACK6ARRAY>"
+   "TRACK6ARRAY"
+   "<TRACK_6>"
+   "TRACK_6"
   ))
 

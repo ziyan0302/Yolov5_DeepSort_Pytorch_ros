@@ -42,6 +42,8 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
     "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg"
     "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg"
     "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+    "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Track_6.msg"
+    "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Track6Array.msg"
     )
 endif()
 

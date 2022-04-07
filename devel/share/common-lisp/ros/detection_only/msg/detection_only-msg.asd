@@ -11,4 +11,8 @@
     (:file "_package_Bbox_6" :depends-on ("_package"))
     (:file "Image" :depends-on ("_package_Image"))
     (:file "_package_Image" :depends-on ("_package"))
+    (:file "Track6Array" :depends-on ("_package_Track6Array"))
+    (:file "_package_Track6Array" :depends-on ("_package"))
+    (:file "Track_6" :depends-on ("_package_Track_6"))
+    (:file "_package_Track_6" :depends-on ("_package"))
   ))

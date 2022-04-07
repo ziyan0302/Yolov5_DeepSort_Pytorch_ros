@@ -1,6 +1,6 @@
 # generated from genmsg/cmake/pkg-genmsg.context.in
 
-messages_str = "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg"
+messages_str = "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox_6.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Bbox6Array.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Image.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Track_6.msg;/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src/detection_only/msg/Track6Array.msg"
 services_str = ""
 pkg_name = "detection_only"
 dependencies_str = "std_msgs;sensor_msgs"

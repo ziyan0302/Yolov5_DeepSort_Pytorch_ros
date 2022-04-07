@@ -158,6 +158,8 @@ struct Definition< ::detection_only::Bbox6Array_<ContainerAllocator> >
 "# [x1,y1,x2,y2,conf,class]\n"
 "Image image\n"
 "Bbox_6[] bboxes \n"
+"\n"
+"\n"
 "================================================================================\n"
 "MSG: detection_only/Image\n"
 "# This message contains an uncompressed image\n"

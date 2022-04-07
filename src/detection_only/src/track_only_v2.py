@@ -106,7 +106,9 @@ def track(msg):
     
     path = str(img_idx) + ".jpg"
     # Read image
-    im0s = cv_image
+    # cv_image = cv_image.transpose(2,1,0)
+    im0s = cv_image[:,:,[2,1,0]]
+    # pdb.set_trace()
 
     # Padded resize
     img_size = 640
@@ -299,15 +301,15 @@ if __name__ == '__main__':
 
     # Dataloader
     global dataset
-    if webcam:
-        show_vid = check_imshow()
-        cudnn.benchmark = True  # set True to speed up constant image size inference
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt and not jit)
-        bs = len(dataset)  # batch_size
-    else:
-        dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt and not jit)
-        bs = 1  # batch_size
-    vid_path, vid_writer = [None] * bs, [None] * bs
+    # if webcam:
+    #     show_vid = check_imshow()
+    #     cudnn.benchmark = True  # set True to speed up constant image size inference
+    #     dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt and not jit)
+    #     bs = len(dataset)  # batch_size
+    # else:
+    #     dataset = LoadImages(source, img_size=imgsz, stride=stride, auto=pt and not jit)
+    #     bs = 1  # batch_size
+    # vid_path, vid_writer = [None] * bs, [None] * bs
 
     # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -328,7 +330,6 @@ if __name__ == '__main__':
     try:
         while not rospy.is_shutdown():
             rospy.init_node('tracking_node_v2', anonymous=False)
-            last_t = rospy.Time.now().to_sec()
             rate = rospy.Rate(10)
             det_sub = rospy.Subscriber('det_result', Bbox6Array, det_cb, opt, queue_size=1)
             track_pub = rospy.Publisher('track_result', Track6Array, queue_size=1)
