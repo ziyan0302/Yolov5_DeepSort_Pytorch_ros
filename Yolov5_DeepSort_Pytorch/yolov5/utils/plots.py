@@ -120,6 +120,86 @@ class Annotator:
         # Return annotated image as array
         return np.asarray(self.im)
 
+    ##### Trajectory code #####
+    def draw_grtr(self, img, positions, width):
+        for t in range(len(positions) - 1):
+            cv2.line(img, (round(positions[t][0]), round(positions[t][1])), \
+                     (round(positions[t + 1][0]), round(positions[t + 1][1])), \
+                     color=(255,255,255), thickness=width, lineType=cv2.LINE_AA)
+
+    def draw_trajectory(self, diverse_traj_data, blur_size, dets, frame_id):
+        ### Ask ###
+        w = dets[:, 2] - dets[:, 0] 
+        h = dets[:, 3] - dets[:, 1]
+        cxs = dets[:, 0] + (w//2)
+        y2s = dets[:, 1] + h # 
+        ########
+        traj_mask = np.zeros((self.im.shape[0], self.im.shape[1], 3))
+
+        # line_mask = np.zeros((npy_line.shape[0], npy_line.shape[1], 3))
+        line_mask = np.zeros((self.im.shape[0], self.im.shape[1], 3))
+        
+        final = None
+
+        bot_max = -1
+        for l in range(len(cxs)):
+            cx = cxs[l]
+            y2 = y2s[l]
+
+            # if cx >= npy_line.shape[1]:
+            #     cx = npy_line.shape[1] - 1
+            # if y2 > npy_line.shape[0]:
+            #     y2 = npy_line.shape[0] - 1
+
+            if cx >= self.im.shape[1]:
+                cx = self.im.shape[1] - 1
+            if y2 > self.im.shape[0]:
+                y2 = self.im.shape[0] - 1
+        if frame_id in diverse_traj_data.keys():
+            frame_data = diverse_traj_data[frame_id] # n_samples, num_id, timestep, coordinate (20, 2, 25, 4)
+            traj_layers = np.zeros((20, self.im.shape[0], self.im.shape[1]), np.uint8)
+            for i, sample in enumerate(frame_data): # i: sample_id, sample: different_traj in a frame
+                routes = None
+                for agent_data in sample:
+                    route = agent_data[:, 2:4]
+                    self.draw_grtr(traj_layers[i], route, 15) 
+                    
+            heatmap_layer = np.sum(traj_layers, axis=0).astype(np.uint8)
+            heatmap_layer = cv2.blur(heatmap_layer, (blur_size, blur_size))
+            heat = heatmap_layer.copy()
+
+            heat[heat>0] = 255
+            traj_mask[heat==255] = (0,0,255)
+            index_y, index_x = np.where(heat == 255)[0], np.where(heat == 255)[1]
+            tra_max = -1
+            for iy, ix in zip(index_y, index_x):
+                # if line_mask[iy, ix, 1] == 255 and line_mask[iy, ix, 2] == 0 and iy > tra_max:
+                if iy > tra_max: # Add new line
+                    tra_max = iy
+            if tra_max >= 0:
+                #line_mask[npy_line==1] = (0,255,0)
+                line_mask[:tra_max, :, [1, 2]] = line_mask[:tra_max, :, [2, 1]]
+            else:
+                line_mask = line_mask
+
+            heat_gray = cv2.cvtColor(traj_mask.astype(np.uint8), cv2.COLOR_BGR2GRAY)
+            cnts, hierarchy = cv2.findContours(heat_gray.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            heatmap_layer = cv2.applyColorMap(heatmap_layer, cv2.COLORMAP_HOT)
+            final_1 = cv2.addWeighted(line_mask.astype(np.uint8), 1, self.im, 1, 0)
+            final_2 = cv2.addWeighted(traj_mask.astype(np.uint8), 1, self.im, 1, 0)
+            final = cv2.addWeighted(final_1, 0.5, final_2, 0.5, 0)
+            cv2.drawContours(final, cnts, -1, (0, 0, 0), 1, lineType=cv2.LINE_AA)
+
+        else:
+            final = cv2.addWeighted(line_mask.astype(np.uint8), 1, self.im, 1, 0)
+            #final_2 = image
+            heat = np.zeros((self.im.shape[0], self.im.shape[1]))
+        
+        #final = cv2.resize(final, (0,0), fx = 0.5, fy = 0.5) 
+        self.im = final
+    ###########
+
 
 def feature_visualization(x, module_type, stage, n=32, save_dir=Path('runs/detect/exp')):
     """

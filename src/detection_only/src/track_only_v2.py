@@ -29,11 +29,11 @@ from yolov5.utils.general import (LOGGER, check_img_size, non_max_suppression, s
 from yolov5.utils.torch_utils import select_device, time_sync
 from yolov5.utils.plots import Annotator, colors
 from deep_sort.utils.parser import get_config
+import pdb
 from deep_sort.deep_sort import DeepSort
 import rospy
 from detection_only.msg import Bbox_6, Bbox6Array, Track_6, Track6Array
 from cv_bridge import CvBridge
-import pdb
 import json
 import numpy as np
 
@@ -42,6 +42,129 @@ ROOT = FILE.parents[0]  # yolov5 deepsort root directory
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+
+##### Trajectory code #####
+def draw_grtr(img, positions, width):
+    for t in range(len(positions) - 1):
+        cv2.line(img, (round(positions[t][0]), round(positions[t][1])), \
+                 (round(positions[t + 1][0]), round(positions[t + 1][1])), \
+                 color=(255,255,255), thickness=width, lineType=cv2.LINE_AA)
+
+# Each time as a single loop/single frame
+# Add frame signal inside
+def cleaning_traj_data(tracking_output, frame): 
+    # 0-3: x1,y1,x2,y2   4: id   5:cls 
+    # <-> Original: 
+    # frame(0), class(1), ID(2), x1(3), y1(4), w(5), h(6)
+    tracking_data_ped = [e for e in tracking_output if e[5] == 0] # 0: ped, 2: vehicle
+    # Delete cls with vehicle
+    tracking_data_ped = np.delete(tracking_data_ped, 5, axis=1) # frame(timestamp), class, ID, x1, y1, x2, y2
+    #tracking_data = tracking_data_ped[:, :4].copy() # frame(timestamp), ID, x1, y1
+    
+    # x,y,w,h
+    tracking_data_ped[:, 2] = tracking_data_ped[:, 2] - tracking_data_ped[:, 0]
+    tracking_data_ped[:, 3] = tracking_data_ped[:, 3] - tracking_data_ped[:, 1]
+    tracking_data_ped[:, 0] = tracking_data_ped[:, 0] + (tracking_data_ped[:, 2]) / 2 
+    tracking_data_ped[:, 1] = tracking_data_ped[:, 1] + tracking_data_ped[:, 3] #  # frame, ID, xc, y2
+
+    # id move to the front (insert to each list)
+    tracking_data_ped_list = tracking_data_ped.tolist()
+    #print(tracking_data_ped_list)
+    traj_data = []
+    for l in tracking_data_ped_list:
+        l.insert(0, l[4])
+        l.pop(5)
+        l.insert(0, frame)
+        traj_data.append(l)
+    #print(traj_data) 
+    traj_data = np.array(traj_data)
+    return traj_data
+
+def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0):  
+    # count frame_id? agent_id?  
+    #frame_ids, counts = np.unique(frame_counter[0, :, 0], return_counts=True)
+
+    tracking_agent = {}
+    traj_data = {}
+
+    #index = 0
+    disappear_id = {}
+    for i, t in enumerate(frame_counter): # frame_ids
+        agent_in_the_frame = t
+        # Stop tracking an agent when it does not appear in near frames (forget_frames)
+        pop_list = []
+        for key, value in tracking_agent.items():
+            if key not in agent_in_the_frame[:, 1]: # ID_list
+                if key not in disappear_id.keys():
+                    disappear_id[key] = 1
+                else:
+                    disappear_id[key] += 1
+                if disappear_id[key] >= forget_frames:
+                    pop_list.append(key)
+            else:
+                if key not in disappear_id.keys():
+                    pass
+                else:
+                    disappear_id.pop(key)
+        for key in pop_list:
+            tracking_agent.pop(key)
+        # Start or continuous tracking agents in this frame
+        for agent in agent_in_the_frame:
+            frame = agent[0]
+            id = agent[1]
+            if id not in tracking_agent.keys():
+                tracking_agent[id] = np.expand_dims(agent, axis=0)
+            else:
+                tracking_agent[id] = np.concatenate((tracking_agent[id], np.expand_dims(agent, axis=0)))
+
+                # Output trajectory data when continuous tracking exceeds 20 frames (predict_len=20)
+                if (tracking_agent[id][-1][0]-tracking_agent[id][0][0]+1) >= predict_len:
+                    start_frame = frame
+                    frames = np.arange(start_frame, start_frame+predict_len)
+                    ids = np.repeat(id, predict_len)
+                    x = tracking_agent[id][:][:,2] # past xs
+                    y = tracking_agent[id][:][:,3] # past ys
+                    parameter = np.polyfit(x, y, 1) # create extrapolate function
+                    p = np.poly1d(parameter)
+                    xs = np.linspace(x[-1],x[-1]+extra_length*(x[-1]-x[0]), predict_len) # extrapolate 1.5x length of past trajectory
+                    ys = p(xs)
+
+                    if start_frame not in traj_data.keys():
+                        traj_data[start_frame] = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
+                    else:
+                        new_id_traj = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
+
+                        traj_data[start_frame] = np.concatenate((traj_data[start_frame], new_id_traj)) # new id         
+                    tracking_agent[id] = tracking_agent[id][1:]          
+
+        #index += counts[i]
+    return traj_data
+
+thetas = np.linspace(-0.2, 0.2, num=20)
+def traj_diversify(traj_data, n_samples): # Expand the single path into a sector
+    diverse_traj_data = {}
+    for key, value in traj_data.items():
+        diverse_traj_data[key] = [[] for i in range(n_samples)]
+
+        for agent_data in value:
+            agent_velocity_data = agent_data[1:, 2:4] - agent_data[:-1, 2:4] # x_t+1 - x_t, y_t+1 - y_t
+
+            for i in range(n_samples):
+                theta = thetas[i]
+
+                rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]])
+                rotated_velocity = np.matmul(agent_velocity_data, rotation_matrix)
+                rotated_traj = agent_data[0, 2:4] + np.cumsum(rotated_velocity, axis=0) # a = array([[1 2 3], [4 5 6]]) np.cumsum(a) = array([1 3 6 10 15 21]) np.cumsum(a, axis=0) = array([1 2 3], [5 7 9])
+                rotated_traj = np.concatenate((np.expand_dims(agent_data[0, 2:4], 0), rotated_traj), axis=0) # t1~t -> t0~t
+
+                rotated_agent_data = agent_data.copy()
+                rotated_agent_data[:, 2:4] = rotated_traj
+                diverse_traj_data[key][i].append(rotated_agent_data)
+
+    return diverse_traj_data
+
+
+###########
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
     # copy from utils/augmentations.py
@@ -81,7 +204,7 @@ def track(msg):
     global out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, project, name, exist_ok, device_g
     global config_deepsort, save_img
     global webcam, deepsort, save_dir, model, dataset, names, txt_path, dt, seen
-    global img_idx
+    global img_idx, frame_counter
     img_idx +=1
     
     # subcribe msg
@@ -128,7 +251,6 @@ def track(msg):
 
     
 
-
     # Process detections
     for i, det in enumerate(pred):  # detections per image # since len(pred) = 1, det = pred
         seen += 1
@@ -139,6 +261,7 @@ def track(msg):
 
         annotator = Annotator(im0, line_width=2, pil=not ascii)
 
+        #frame = 1 # timestamp
         if det is not None and len(det):
             # Rescale boxes from img_size to im0 size
             det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
@@ -157,18 +280,52 @@ def track(msg):
             track_result = Track_6()
 
 
+            ##### Trajectory code #####
+            predict_len = 6
+            forget = 3 
+            #frame_counter = []
+            traj_data = []
+            diverse_traj_data = []
+            blur_size = 3
+            ###########
+
             # draw boxes for visualization
             if len(outputs) > 0:
+
+                ###### Trajectory code #####
+                ### Simple way first, for each id that appears in 6 continous frames
+                ### Only the start 6 frames have problem, skip those instead (counter)
+                ### queue and pop 6 frames, while 6 frames, do enumerate, then pop the oldest
+                frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
+                frame_counter.append(frame_traj_data)
+                # pdb.set_trace()
+                #frame += 1
+                if len(frame_counter) == 6:
+                    traj_data = create_traj_data(frame_counter, predict_len, forget)
+                    diverse_traj_data = traj_diversify(traj_data, n_samples=20)
+                ###########
+                print(len(frame_counter))
+
                 for j, (output, conf) in enumerate(zip(outputs, confs)):
 
                     bboxes = output[0:4]
                     id = output[4]
                     cls = output[5]
 
+                    ##### Trajectory code #####
+                    if len(frame_counter) == 6:
+                        annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
+                    ###########
+
                     c = int(cls)  # integer class
                     label = f'{id} {names[c]} {conf:.2f}'
                     annotator.box_label(bboxes, label, color=colors(c, True))
-
+                
+                ###### Trajectory code #####
+                if len(frame_counter) == 6:
+                    frame_counter.pop(0)
+                    print(len(frame_counter))
+                ###########
 
 
         else:
@@ -257,6 +414,7 @@ if __name__ == '__main__':
     device = select_device(device_g)
     cfg = get_config()
     cfg.merge_from_file(config_deepsort)
+
     deepsort = DeepSort(deep_sort_model,
                         device,
                         max_dist=cfg.DEEPSORT.MAX_DIST,
@@ -318,6 +476,7 @@ if __name__ == '__main__':
     txt_file_name = source.split('/')[-1].split('.')[0]
     global txt_path
     txt_path = str(Path(save_dir)) + '/' + txt_file_name + '.txt'
+    # pdb.set_trace()
 
     if pt and device.type != 'cpu':
         model(torch.zeros(1, 3, *imgsz).to(device).type_as(next(model.model.parameters())))  # warmup
@@ -326,6 +485,11 @@ if __name__ == '__main__':
 
     img_idx = 0
 
+    # pdb.set_trace()
+
+    # trajectory 
+    global frame_counter
+    frame_counter = []
 
     try:
         while not rospy.is_shutdown():
