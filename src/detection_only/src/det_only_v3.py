@@ -163,7 +163,7 @@ def detect(msg, opt):
     # (1,12,6) -> (_, num of bboxes, information of each bbox)
     # [x1,y1,x2,y2,conf,class]
 
-
+    # pdb.set_trace()
     det_results = [pred[0].tolist()]
     data = Bbox6Array()
     for i in range(len(det_results[0])):
@@ -236,8 +236,8 @@ if __name__ == '__main__':
             rospy.init_node('detection_node', anonymous=False)
             rate = rospy.Rate(10)
             det_pub = rospy.Publisher('det_result', Bbox6Array, queue_size=1)
-            # img_sub = rospy.Subscriber('/camera/color/image_raw', Image, img_cb, queue_size=1)
-            img_sub = rospy.Subscriber('/raw_image', Image, img_cb, queue_size=1)
+            img_sub = rospy.Subscriber('/camera/color/image_raw', Image, img_cb, queue_size=1)
+            # img_sub = rospy.Subscriber('/raw_image', Image, img_cb, queue_size=1)
 
             rospy.spin()
 

@@ -58,6 +58,7 @@ def cleaning_traj_data(tracking_output, frame):
     # frame(0), class(1), ID(2), x1(3), y1(4), w(5), h(6)
     tracking_data_ped = [e for e in tracking_output if e[5] == 0] # 0: ped, 2: vehicle
     # Delete cls with vehicle
+    # pdb.set_trace()
     tracking_data_ped = np.delete(tracking_data_ped, 5, axis=1) # frame(timestamp), class, ID, x1, y1, x2, y2
     #tracking_data = tracking_data_ped[:, :4].copy() # frame(timestamp), ID, x1, y1
     
