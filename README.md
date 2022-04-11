@@ -18,10 +18,10 @@ source devel/setup.bash
 ```
 To rosrun Yolov5 detection node:
 ```
-rosrun detection_only det_only.py --source /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test.jpg
+rosrun detection_only det_only_v3.py 
 ```
 
 To rosrun DeepSort tracking node:
 ```
-rosrun detection_only track_only.py --source /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test.jpg
+rosrun detection_only track_only_v2.py --source /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less/ --save-img
 ```
