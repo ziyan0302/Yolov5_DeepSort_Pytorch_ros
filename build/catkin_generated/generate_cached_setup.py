@@ -19,7 +19,7 @@ except ImportError:
             break
     from catkin.environment_cache import generate_environment_script
 
-code = generate_environment_script('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/env.sh')
+code = generate_environment_script('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/devel/env.sh')
 
 output_filename = '/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/catkin_generated/setup_cached.sh'
 with open(output_filename, 'w') as f:

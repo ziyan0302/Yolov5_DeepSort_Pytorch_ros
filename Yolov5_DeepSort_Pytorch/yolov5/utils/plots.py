@@ -16,6 +16,7 @@ import pandas as pd
 import seaborn as sn
 import torch
 from PIL import Image, ImageDraw, ImageFont
+import pdb
 
 from utils.general import (LOGGER, Timeout, check_requirements, clip_coords, increment_path, is_ascii, is_chinese,
                            try_except, user_config_dir, xywh2xyxy, xyxy2xywh)
@@ -200,6 +201,96 @@ class Annotator:
         self.im = final
     ###########
 
+    ##### Sound Signal code #####
+    def addTogether(self, car,x,y, type='icon'):   # img為背景圖 ,car為車子圖 , x,y為圖像在背景的位置
+    
+        
+        rows,cols,channels = car.shape #拆分圖片信息
+        #轉換格式 
+        img_hsv = cv2.cvtColor(car,cv2.COLOR_RGB2HSV) #把圖片轉換成HSV格式，用於摳圖 
+        #摳圖 
+        lower_blue=np.array([0,0,0]) #獲取最小閾值 
+        #upper_blue=np.array([0,255,255]) #獲取最大閾值 
+        upper_color = np.array([0,0,0])
+        if type == 'car':
+            upper_color = np.array([0,255,255])
+        else:
+            upper_color = np.array([255,0,0])
+        mask = cv2.inRange(img_hsv, lower_blue, upper_color) #創建遮罩 
+
+        erode=cv2.erode(mask,None,iterations=3) #圖像腐蝕 
+
+        dilate=cv2.dilate(erode,None,iterations=1) #圖像膨脹 
+
+        opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (8,8))) #開運算 
+
+        #========圖像合併==========================================================================================
+        center = [y,x] #設置car在背景圖的起始位置
+        for i in range(rows): 
+            for j in range(cols): 
+                if opening[i,j]==0: #代表黑色
+                    self.im[center[0]+i,center[1]+j] =car[i,j] #賦值顏色
+    
+    def sound_signal(self):
+        #導入車子圖
+        #global tmp # Take the global var tmp
+        car = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/car.png') #car圖片導入
+        car = cv2.resize(car,(0,0),fx=0.15,fy=0.15)
+
+        #導入ambulance
+        amb = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/type_icon/amb.png') #ambulance圖片導入
+        #pdb.set_trace()
+        amb = cv2.resize(amb,(0,0),fx=0.5,fy=0.5)
+        #pdb.set_trace()
+
+        #================初始化座標值=====================
+        x = int(0.1*self.im.shape[1]) #圓的x座標 圖片的寬的倍數 shape=(length,width,channel)
+        y = int(0.8*self.im.shape[0]) #圓的y座標
+        r =int(0.15*self.im.shape[0]) #圓的半徑
+
+        #================畫出圓形=====================
+        cv2.circle(self.im,(x,y),r,(84,46,8),-1)
+        m = 3 #畫m個同心圓
+        r_circle = r/m
+        for i in range(1,m+1):
+            cv2.circle(self.im,(x,y),int(r_circle*i),(255,255,255),1)
+
+        #================畫出直線=====================
+        #每45度畫一條線
+        #直線點座標(x_line,y_line)
+        n = 12 #畫出n等份的圓
+        degree_line = 360/n #每 degree_line度 就畫線
+        #print("degree_line:"+str(degree_line))
+
+        for i in range(n):
+            theta_line =  ((i*degree_line)/180)*math.pi #角度轉成弧度
+            x_line = int(x + r*math.cos(theta_line))
+            y_line = int(y - r*math.sin(theta_line))
+            cv2.line(self.im,(x,y),(x_line,y_line),(250,255,255),1)
+
+        #===========================================
+        #方位角 角度為n等份的範圍值 (畫扇形:橢圓的長軸與短軸=圓形半徑)
+        ### Select a specific signal
+        p = 7 # 7*30
+        #p = np.random.randint(0,n)  #隨機挑選第n等份的某值 -> Also, the pic being select is not in the correct order (Double random)
+
+
+        #print("p:"+str(p))
+        degree_elli_start = p * degree_line # degree_line=360/n #起始角度
+        degree_elli_end = (p+1) * degree_line #終止角度
+
+        # #橢圓(圖片名稱,中心點,(長軸,短軸),旋轉角度（順時針方向）,繪製的起始角度（順時針方向）,繪製的終止角度(順時針方向),線條顏色,線條粗細)
+        cv2.ellipse(self.im,(x,y),(r,r),0,-degree_elli_start,-degree_elli_end,(0,215,255),-1)
+
+        self.addTogether(car,int(70*1080//540),int(410*1920//960), type='car') # position change
+        #self.addTogether(car,0.8*self.im.shape[0], 0.1*self.im.shape[1], type='car')
+        
+        self.addTogether(amb,int(200*1080//540),int(400*1920//960)) # position change
+
+    #return draw_img
+
+
+    ###########
 
 def feature_visualization(x, module_type, stage, n=32, save_dir=Path('runs/detect/exp')):
     """

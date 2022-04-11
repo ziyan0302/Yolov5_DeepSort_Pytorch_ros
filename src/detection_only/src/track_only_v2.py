@@ -163,8 +163,6 @@ def traj_diversify(traj_data, n_samples): # Expand the single path into a sector
                 diverse_traj_data[key][i].append(rotated_agent_data)
 
     return diverse_traj_data
-
-
 ###########
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -328,10 +326,13 @@ def track(msg):
                     print(len(frame_counter))
                 ###########
 
-
         else:
             deepsort.increment_ages()
             LOGGER.info('No detections')
+
+        ##### Sound signal code #####
+        annotator.sound_signal()
+        ###########
 
         # Stream results
         im0 = annotator.result()

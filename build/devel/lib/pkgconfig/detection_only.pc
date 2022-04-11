@@ -1,0 +1,8 @@
+prefix=/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/devel
+
+Name: detection_only
+Description: Description of detection_only
+Version: 0.0.0
+Cflags: -I/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/devel/include
+Libs: -L${prefix}/lib 
+Requires: roscpp rospy std_msgs message_runtime sensor_msgs

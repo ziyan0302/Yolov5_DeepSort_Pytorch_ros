@@ -7,6 +7,8 @@
 # new environment variables
 
 # modified environment variables
-export LD_LIBRARY_PATH='/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/lib:/opt/ros/noetic/lib:/opt/ros/noetic/lib/x86_64-linux-gnu:/usr/local/cuda-11.3/lib64'
-export PKG_CONFIG_PATH='/home/ziyan/Yolov5_DeepSort_Pytorch_ros/devel/lib/pkgconfig:/opt/ros/noetic/lib/pkgconfig:/opt/ros/noetic/lib/x86_64-linux-gnu/pkgconfig'
+export CMAKE_PREFIX_PATH="/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/devel:$CMAKE_PREFIX_PATH"
+export LD_LIBRARY_PATH="/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/devel/lib:$LD_LIBRARY_PATH"
 export PWD='/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build'
+export ROSLISP_PACKAGE_DIRECTORIES="/home/ziyan/Yolov5_DeepSort_Pytorch_ros/build/devel/share/common-lisp:$ROSLISP_PACKAGE_DIRECTORIES"
+export ROS_PACKAGE_PATH="/home/ziyan/Yolov5_DeepSort_Pytorch_ros/src:$ROS_PACKAGE_PATH"
