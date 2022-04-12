@@ -231,7 +231,7 @@ class Annotator:
                 if opening[i,j]==0: #代表黑色
                     self.im[center[0]+i,center[1]+j] =car[i,j] #賦值顏色
     
-    def sound_signal(self):
+    def sound_signal(self, data): # Add signal
         #導入車子圖
         #global tmp # Take the global var tmp
         car = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/car.png') #car圖片導入
@@ -242,6 +242,14 @@ class Annotator:
         #pdb.set_trace()
         amb = cv2.resize(amb,(0,0),fx=1.2,fy=1.2)
         #pdb.set_trace()
+
+        fire = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/type_icon/fire.png') #ambulance圖片導入
+        #pdb.set_trace()
+        fire = cv2.resize(amb,(0,0),fx=1.2,fy=1.2)
+
+        police = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/type_icon/police.png') #ambulance圖片導入
+        #pdb.set_trace()
+        police = cv2.resize(amb,(0,0),fx=1.2,fy=1.2)
 
         #================初始化座標值=====================
         x = int(0.1*self.im.shape[1]) #圓的x座標 圖片的寬的倍數 shape=(length,width,channel)
@@ -270,24 +278,32 @@ class Annotator:
 
         #===========================================
         #方位角 角度為n等份的範圍值 (畫扇形:橢圓的長軸與短軸=圓形半徑)
-        ### Select a specific signal
-        p = 7 # 7*30
-        #p = np.random.randint(0,n)  #隨機挑選第n等份的某值 -> Also, the pic being select is not in the correct order (Double random)
+        angle, label_type = data.split(',')
+        label_list = [2,3,4]
+        if label_type in label_list:
+            ### Select a specific signal
+            p = (12 - angle // 30) % 12 # 330->11->1, 30->1->11
+            #p = 7 # 7*30
+            #p = np.random.randint(0,n)  #隨機挑選第n等份的某值 -> Also, the pic being select is not in the correct order (Double random)
 
 
-        #print("p:"+str(p))
-        degree_elli_start = p * degree_line # degree_line=360/n #起始角度
-        degree_elli_end = (p+1) * degree_line #終止角度
+            #print("p:"+str(p))
+            degree_elli_start = p * degree_line # degree_line=360/n #起始角度
+            degree_elli_end = (p+1) * degree_line #終止角度
 
-        # #橢圓(圖片名稱,中心點,(長軸,短軸),旋轉角度（順時針方向）,繪製的起始角度（順時針方向）,繪製的終止角度(順時針方向),線條顏色,線條粗細)
-        cv2.ellipse(self.im,(x,y),(r,r),0,-degree_elli_start,-degree_elli_end,(0,215,255),-1)
+            # #橢圓(圖片名稱,中心點,(長軸,短軸),旋轉角度（順時針方向）,繪製的起始角度（順時針方向）,繪製的終止角度(順時針方向),線條顏色,線條粗細)
+            cv2.ellipse(self.im,(x,y),(r,r),0,-degree_elli_start,-degree_elli_end,(0,215,255),-1)
 
         # x,y
-        #self.addTogether(car,int(70*1080//540),int(410*1920//960), type='car') # position change
         self.addTogether(car, x - car.shape[1]//2, y - car.shape[0]//2, type='car')
         
-        #self.addTogether(amb,int(200*1080//540),int(400*1920//960)) # position change
-        self.addTogether(amb,2*x,y - amb.shape[0]//2)
+        if label_type == 2: # police
+            self.addTogether(police, 2*x,y - police.shape[0]//2)
+        elif label_type == 3: # fire
+            self.addTogether(fire, 2*x,y - fire.shape[0]//2)
+        elif label_type == 4: # amb
+            self.addTogether(amb, 2*x,y - amb.shape[0]//2)
+
 
     #return draw_img
 
