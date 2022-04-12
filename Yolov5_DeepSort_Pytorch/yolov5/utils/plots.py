@@ -235,12 +235,12 @@ class Annotator:
         #導入車子圖
         #global tmp # Take the global var tmp
         car = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/car.png') #car圖片導入
-        car = cv2.resize(car,(0,0),fx=0.15,fy=0.15)
+        car = cv2.resize(car,(0,0),fx=0.4,fy=0.4) # 0.15, 0.15
 
         #導入ambulance
         amb = cv2.imread('/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/icon_imgs/type_icon/amb.png') #ambulance圖片導入
         #pdb.set_trace()
-        amb = cv2.resize(amb,(0,0),fx=0.5,fy=0.5)
+        amb = cv2.resize(amb,(0,0),fx=1.2,fy=1.2)
         #pdb.set_trace()
 
         #================初始化座標值=====================
@@ -282,10 +282,12 @@ class Annotator:
         # #橢圓(圖片名稱,中心點,(長軸,短軸),旋轉角度（順時針方向）,繪製的起始角度（順時針方向）,繪製的終止角度(順時針方向),線條顏色,線條粗細)
         cv2.ellipse(self.im,(x,y),(r,r),0,-degree_elli_start,-degree_elli_end,(0,215,255),-1)
 
-        self.addTogether(car,int(70*1080//540),int(410*1920//960), type='car') # position change
-        #self.addTogether(car,0.8*self.im.shape[0], 0.1*self.im.shape[1], type='car')
+        # x,y
+        #self.addTogether(car,int(70*1080//540),int(410*1920//960), type='car') # position change
+        self.addTogether(car, x - car.shape[1]//2, y - car.shape[0]//2, type='car')
         
-        self.addTogether(amb,int(200*1080//540),int(400*1920//960)) # position change
+        #self.addTogether(amb,int(200*1080//540),int(400*1920//960)) # position change
+        self.addTogether(amb,2*x,y - amb.shape[0]//2)
 
     #return draw_img
 

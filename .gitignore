@@ -5,5 +5,4 @@
 runs/
 *.pt
 tensorrt_demos/
-devel/
-build/
+

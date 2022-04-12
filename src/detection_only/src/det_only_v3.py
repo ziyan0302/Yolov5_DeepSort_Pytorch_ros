@@ -178,8 +178,8 @@ def detect(msg, opt):
         data.bboxes.append(bbox)
     # data.image = br.cv2_to_imgmsg(np.squeeze(img.cpu().numpy()))
     data.image = br.cv2_to_imgmsg(im0s)
-    pdb.set_trace()
-    data.timestamp = msg.header.stamp
+    # pdb.set_trace()
+    # data.timestamp = msg.header.stamp
     # print(det_results)
     det_pub.publish(data)
     print("detetion publish!!!!!!")
