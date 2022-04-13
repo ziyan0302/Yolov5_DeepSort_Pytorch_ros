@@ -82,51 +82,16 @@ def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleF
 def detect(msg, opt):
     global br
     global out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, project, name, exist_ok
-
+    global device, half, model
+    det_start = time.time()
     # receive rosmessage and convert to ndarray
     # raw_data = msg.data
     raw_data = msg
-    bridge = CvBridge()
-    cv_image = bridge.imgmsg_to_cv2(raw_data, desired_encoding='passthrough')
+    cv_image = br.imgmsg_to_cv2(raw_data, desired_encoding='passthrough')
 
-
-    device = select_device(opt.device)
-    # initialize deepsort
-    cfg = get_config()
-    cfg.merge_from_file(opt.config_deepsort)
-
-    # Initialize
-    
-    half &= device.type != 'cpu'  # half precision only supported on CUDA
-
-    # The MOT16 evaluation runs multiple inference streams in parallel, each one writing to
-    # its own .txt file. Hence, in that case, the output folder is not restored
-    if not evaluate:
-        if os.path.exists(out):
-            pass
-            shutil.rmtree(out)  # delete output folder
-        os.makedirs(out)  # make new output folder
-
-    # Load model
-    device = select_device(device)
-    model = DetectMultiBackend(yolo_model, device=device, dnn=opt.dnn)
-    stride, names, pt, jit, _ = model.stride, model.names, model.pt, model.jit, model.onnx
-    imgsz = check_img_size(imgsz, s=stride)  # check image size
-
-    # Half
-    half &= pt and device.type != 'cpu'  # half precision only supported by PyTorch on CUDA
-    if pt:
-        model.model.half() if half else model.model.float()
-
-    if show_vid:
-        show_vid = check_imshow()
-
-
-    if pt and device.type != 'cpu':
-        model(torch.zeros(1, 3, *imgsz).to(device).type_as(next(model.model.parameters())))  # warmup
-    dt, seen = [0.0, 0.0, 0.0, 0.0], 0
 
     
+   
     # Read image
     im0s = cv_image
 
@@ -141,29 +106,25 @@ def detect(msg, opt):
     img = np.ascontiguousarray(img)
 
 
-    t1 = time_sync()
     img = torch.from_numpy(img).to(device)
     img = img.half() if half else img.float()  # uint8 to fp16/32
     img /= 255.0  # 0 - 255 to 0.0 - 1.0
     if img.ndimension() == 3:
         img = img.unsqueeze(0)
-    t2 = time_sync()
-    dt[0] += t2 - t1
+
 
     # Inference
     visualize = False
     pred = model(img, augment=opt.augment, visualize=visualize)
     
-    t3 = time_sync()
-    dt[1] += t3 - t2
 
 
     # Apply NMS
     pred = non_max_suppression(pred, opt.conf_thres, opt.iou_thres, opt.classes, opt.agnostic_nms, max_det=opt.max_det)
     # (1,12,6) -> (_, num of bboxes, information of each bbox)
     # [x1,y1,x2,y2,conf,class]
-
-    # pdb.set_trace()
+    det_fin = time.time()
+    print("det cost: ", det_fin - det_start)
     det_results = [pred[0].tolist()]
     data = Bbox6Array()
     for i in range(len(det_results[0])):
@@ -223,6 +184,7 @@ if __name__ == '__main__':
     
     global br, opt, freq
     global out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, project, name, exist_ok
+    global device, model
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     br = CvBridge()
@@ -231,6 +193,37 @@ if __name__ == '__main__':
         opt.output, opt.source, opt.yolo_model, opt.deep_sort_model, opt.show_vid, opt.save_vid, \
         opt.save_txt, opt.imgsz, opt.evaluate, opt.half, opt.project, opt.name, opt.exist_ok
 
+    device = select_device(opt.device)
+
+    # initialize deepsort
+    cfg = get_config()
+    cfg.merge_from_file(opt.config_deepsort)
+
+    # Initialize
+    
+    half &= device.type != 'cpu'  # half precision only supported on CUDA
+
+    # The MOT16 evaluation runs multiple inference streams in parallel, each one writing to
+    # its own .txt file. Hence, in that case, the output folder is not restored
+    if not evaluate:
+        if os.path.exists(out):
+            pass
+            shutil.rmtree(out)  # delete output folder
+        os.makedirs(out)  # make new output folder
+
+    # Load model
+    device = select_device(device)
+    model = DetectMultiBackend(yolo_model, device=device, dnn=opt.dnn)
+    stride, pt= model.stride, model.pt
+    imgsz = check_img_size(imgsz, s=stride)  # check image size
+
+    # Half
+    half &= pt and device.type != 'cpu'  # half precision only supported by PyTorch on CUDA
+    if pt:
+        model.model.half() if half else model.model.float()
+
+    if pt and device.type != 'cpu':
+        model(torch.zeros(1, 3, *imgsz).to(device).type_as(next(model.model.parameters())))  # warmup
     
 
     try:
@@ -238,8 +231,8 @@ if __name__ == '__main__':
             rospy.init_node('detection_node', anonymous=False)
             rate = rospy.Rate(10)
             det_pub = rospy.Publisher('det_result', Bbox6Array, queue_size=1)
-            # img_sub = rospy.Subscriber('/camera/color/image_raw', Image, img_cb, queue_size=1)
-            img_sub = rospy.Subscriber('/raw_image', Image, img_cb, queue_size=1)
+            img_sub = rospy.Subscriber('/camera/color/image_raw', Image, img_cb, queue_size=1)
+            # img_sub = rospy.Subscriber('/raw_image', Image, img_cb, queue_size=1)
 
             rospy.spin()
 

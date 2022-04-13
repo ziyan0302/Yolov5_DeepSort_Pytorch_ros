@@ -33,9 +33,11 @@ import pdb
 from deep_sort.deep_sort import DeepSort
 import rospy
 from detection_only.msg import Bbox_6, Bbox6Array, Track_6, Track6Array
+from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import json
 import numpy as np
+from csv import writer
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 deepsort root directory
@@ -166,30 +168,30 @@ def traj_diversify(traj_data, n_samples): # Expand the single path into a sector
 ###########
 
 ###### Sound signal code #####
-import socket
+# import socket
 
-# data settings
-data_size = 32 # sending 16 bytes = 128 bits (binary touch states, for example)
+# # data settings
+# data_size = 32 # sending 16 bytes = 128 bits (binary touch states, for example)
 
-# server settings
-server_name = str([l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]) # https://stackoverflow.com/a/1267524
-server_port = 8888
-server_address = (server_name, server_port)
+# # server settings
+# server_name = str([l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]) # https://stackoverflow.com/a/1267524
+# server_port = 8888
+# server_address = (server_name, server_port)
 
-# start up server
-print('Setting up server on:', server_address)
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind(server_address)
-server_socket.listen(1)
+# # start up server
+# print('Setting up server on:', server_address)
+# server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# server_socket.bind(server_address)
+# server_socket.listen(1)
 
-# wait for connection
-print('Waiting for a client connection...')
-connection, client_address = server_socket.accept()
-print('Connected to:', client_address)
+# # wait for connection
+# print('Waiting for a client connection...')
+# connection, client_address = server_socket.accept()
+# print('Connected to:', client_address)
 
-# data formatting
-def data2binary(data):
-	return ' '.join([format(ord(i), 'b').zfill(8) for i in data])
+# # data formatting
+# def data2binary(data):
+# 	return ' '.join([format(ord(i), 'b').zfill(8) for i in data])
 
 #########
 
@@ -234,6 +236,10 @@ def track(msg):
     global webcam, deepsort, save_dir, model, dataset, names, txt_path, dt, seen
     global img_idx, frame_counter
     img_idx +=1
+    traj_intime = None
+    traj_outtime = None
+    
+    track_start = time.time()
     
     # subcribe msg
     det_results = msg.bboxes
@@ -302,9 +308,10 @@ def track(msg):
             # (12,1)
 
             # pass detections to deepsort
+            track_intime = time.time()
             outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
+            track_outtime = time.time()
             print(outputs)
-            # pdb.set_trace()
             track_result = Track_6()
 
 
@@ -318,7 +325,10 @@ def track(msg):
             ###########
 
             # draw boxes for visualization
+            vis_start = 0
+            vis_finish = 0
             if len(outputs) > 0:
+                vis_start = time.time()
 
                 ###### Trajectory code #####
                 ### Simple way first, for each id that appears in 6 continous frames
@@ -334,36 +344,37 @@ def track(msg):
                 ###########
                 print(len(frame_counter))
 
-                for j, (output, conf) in enumerate(zip(outputs, confs)):
+                ##### Trajectory code #####
 
+                if len(frame_counter) == 6:
+                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
+                ###########
+
+                for j, (output, conf) in enumerate(zip(outputs, confs)):
                     bboxes = output[0:4]
                     id = output[4]
                     cls = output[5]
-
-                    ##### Trajectory code #####
-                    if len(frame_counter) == 6:
-                        annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
-                    ###########
 
                     c = int(cls)  # integer class
                     label = f'{id} {names[c]} {conf:.2f}'
                     annotator.box_label(bboxes, label, color=colors(c, True))
                 
+                vis_finish = time.time()
                 ###### Trajectory code #####
                 if len(frame_counter) == 6:
                     frame_counter.pop(0)
                     print(len(frame_counter))
                 ###########
+                
 
         else:
             deepsort.increment_ages()
             LOGGER.info('No detections')
 
         ##### Sound signal code #####
-        data = connection.recv(data_size)
-        print('Received', data)
-        angle, label_type = data.split(',')
-        annotator.sound_signal(data)
+        # data = connection.recv(data_size)
+        # print('Received', data)
+        # annotator.sound_signal(data)
         ###########
 
         # Stream results
@@ -374,11 +385,29 @@ def track(msg):
             if cv2.waitKey(1) == ord('q'):  # q to quit
                 raise StopIteration
 
-
-
+        track_image = bridge.cv2_to_imgmsg(im0)
+        track_pub.publish(track_image)
         if save_img: 
             cv2.imwrite(os.path.join(save_dir , '{}.jpg'.format(str(img_idx))), im0)
     
+
+    track_finish = time.time()
+    global track_cost_array
+    track_cost_array.append(track_finish - track_start)
+    print("tracking cost: ", track_finish - track_start)
+    # print("until output: ", track_outtime - track_start)
+    # print("deepsort cost: ", track_outtime - track_intime)
+    # print("traj cost: ", traj_outtime - traj_intime)
+    # print("vis cost: ", vis_finish - vis_start)
+    print("average tracking cost: ", sum(track_cost_array) / len(track_cost_array))
+    # with open('CSVFILE.csv', 'a', newline='') as f_object:  
+    #     # Pass the CSV  file object to the writer() function
+    #     writer_object = writer(f_object)
+    #     # Result - a writer object
+    #     # Pass the data in the list as an argument into the writerow() function
+    #     writer_object.writerow(track_cost_array)  
+    #     # Close the file object
+    #     f_object.close()
     if save_txt or save_vid:
         print('Results saved to %s' % save_path)
         if platform == 'darwin':  # MacOS
@@ -434,6 +463,8 @@ if __name__ == '__main__':
     global config_deepsort, save_img
     global deepsort
     global raw_image, img_idx, image_change
+    global track_cost_array
+    track_cost_array = []
     out, source, yolo_model, deep_sort_model, show_vid, save_vid, save_txt, imgsz, evaluate, half, project, name, exist_ok, device_g,\
         config_deepsort= \
         opt.output, opt.source, opt.yolo_model, opt.deep_sort_model, opt.show_vid, opt.save_vid, \
@@ -530,7 +561,7 @@ if __name__ == '__main__':
             rospy.init_node('tracking_node_v2', anonymous=False)
             rate = rospy.Rate(10)
             det_sub = rospy.Subscriber('det_result', Bbox6Array, det_cb, opt, queue_size=1)
-            track_pub = rospy.Publisher('track_result', Track6Array, queue_size=1)
+            track_pub = rospy.Publisher('track_result', Image, queue_size=1)
             
 
             rate.sleep()

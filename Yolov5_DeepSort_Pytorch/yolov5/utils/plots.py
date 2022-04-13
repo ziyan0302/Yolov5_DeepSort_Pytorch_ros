@@ -21,7 +21,7 @@ import pdb
 from utils.general import (LOGGER, Timeout, check_requirements, clip_coords, increment_path, is_ascii, is_chinese,
                            try_except, user_config_dir, xywh2xyxy, xyxy2xywh)
 from utils.metrics import fitness
-
+import time
 # Settings
 CONFIG_DIR = user_config_dir()  # Ultralytics settings dir
 RANK = int(os.getenv('RANK', -1))
@@ -130,6 +130,7 @@ class Annotator:
 
     def draw_trajectory(self, diverse_traj_data, blur_size, dets, frame_id):
         ### Ask ###
+        # draw_start = time.time()
         w = dets[:, 2] - dets[:, 0] 
         h = dets[:, 3] - dets[:, 1]
         cxs = dets[:, 0] + (w//2)
@@ -156,6 +157,10 @@ class Annotator:
                 cx = self.im.shape[1] - 1
             if y2 > self.im.shape[0]:
                 y2 = self.im.shape[0] - 1
+        
+        # draw_fin = time.time()
+        # print("draw cost: ")
+
         if frame_id in diverse_traj_data.keys():
             frame_data = diverse_traj_data[frame_id] # n_samples, num_id, timestep, coordinate (20, 2, 25, 4)
             traj_layers = np.zeros((20, self.im.shape[0], self.im.shape[1]), np.uint8)

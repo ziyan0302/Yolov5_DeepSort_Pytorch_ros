@@ -26,7 +26,7 @@ if __name__ == '__main__':
     try:
         rospy.init_node('img_test_node', anonymous=False)
         
-        freq = 0.5
+        freq = 2
         timer = rospy.timer.Rate(freq)
         source_folder = "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less"
         img_list = img_list(source_folder)
@@ -39,7 +39,8 @@ if __name__ == '__main__':
             data = Image()
             data = br.cv2_to_imgmsg(img)
             img_pub.publish(data)
-            pdb.set_trace()
+            print("image publish!")
+            # pdb.set_trace()
             timer.sleep()
     except RuntimeError:
         rospy.logfatal("get runtime error")
