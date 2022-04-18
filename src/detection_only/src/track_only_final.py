@@ -58,33 +58,43 @@ def cleaning_traj_data(tracking_output, frame):
     # 0-3: x1,y1,x2,y2   4: id   5:cls 
     # <-> Original: 
     # frame(0), class(1), ID(2), x1(3), y1(4), w(5), h(6)
-    tracking_data_ped = [e for e in tracking_output if e[5] == 0] # 0: ped, 2: vehicle
+    tracking_data_ped = []
+    #pdb.set_trace()
+    for e in tracking_output:
+        if e[5] == 0:
+            tracking_data_ped.append(e)
+    #tracking_data_ped = [e for e in tracking_output if e[5] == 0] # 0: ped, 2: vehicle
+    #pdb.set_trace()
     #print(tracking_data_ped)
-    #print(len(tracking_data_ped))
     # Delete cls with vehicle
     # pdb.set_trace()
-    traj_d = []
-    if len(tracking_data_ped) != 0:
-        tracking_data_ped = np.delete(tracking_data_ped, 5, axis=1) # frame(timestamp), class, ID, x1, y1, x2, y2
-    
-        # x,y,w,h
-        tracking_data_ped[:, 2] = tracking_data_ped[:, 2] - tracking_data_ped[:, 0]
-        tracking_data_ped[:, 3] = tracking_data_ped[:, 3] - tracking_data_ped[:, 1]
-        tracking_data_ped[:, 0] = tracking_data_ped[:, 0] + (tracking_data_ped[:, 2]) / 2 
-        tracking_data_ped[:, 1] = tracking_data_ped[:, 1] + tracking_data_ped[:, 3] #  # frame, ID, xc, y2
+    traj_data = []
 
-        # id move to the front (insert to each list)
-        tracking_data_ped_list = tracking_data_ped.tolist()
+    if len(tracking_data_ped) == 0:
+        return np.array(traj_data)
+
+    tracking_data_ped = np.delete(tracking_data_ped, 5, axis=1) # frame(timestamp), class, ID, x1, y1, x2, y2
+    #tracking_data = tracking_data_ped[:, :4].copy() # frame(timestamp), ID, x1, y1
+    
+    # x,y,w,h
+    tracking_data_ped[:, 2] = tracking_data_ped[:, 2] - tracking_data_ped[:, 0]
+    tracking_data_ped[:, 3] = tracking_data_ped[:, 3] - tracking_data_ped[:, 1]
+    tracking_data_ped[:, 0] = tracking_data_ped[:, 0] + (tracking_data_ped[:, 2]) / 2 
+    tracking_data_ped[:, 1] = tracking_data_ped[:, 1] + tracking_data_ped[:, 3] #  # frame, ID, xc, y2
+    # id move to the front (insert to each list)
+    tracking_data_ped_list = tracking_data_ped.tolist()
+    #print(tracking_data_ped_list)
+
+    if len(tracking_data_ped) > 0:
         for l in tracking_data_ped_list:
             l.insert(0, l[4])
             l.pop(5)
             l.insert(0, frame)
-            traj_d.append(l)
-        #print(traj_data) 
-    
-    traj_d = np.array(traj_d)
+            traj_data.append(l)
+    #print(traj_data) 
 
-    return traj_d
+    #traj_data = np.array(traj_data)
+    return np.array(traj_data)
 
 def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0):  
     # count frame_id? agent_id?  
@@ -339,16 +349,13 @@ def track(msg):
                 ### queue and pop 6 frames, while 6 frames, do enumerate, then pop the oldest
                 frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
                 frame_counter.append(frame_traj_data)
-                ##### Check if there is ped exist #####
-                print(len(frame_traj_data))
-                print(frame_traj_data)
-                if len(frame_traj_data) != 0:
-                    ##### Draw Trajectory code #####
-                    if len(frame_counter) == 6:
-                        traj_data = create_traj_data(frame_counter, predict_len, forget)
-                        diverse_traj_data = traj_diversify(traj_data, n_samples=20)
-                        annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
-                    ###########
+                # pdb.set_trace()
+                #frame += 1
+                if len(frame_counter) == 6:
+                    traj_data = create_traj_data(frame_counter, predict_len, forget)
+                    diverse_traj_data = traj_diversify(traj_data, n_samples=20)
+                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
+                ###########
 
                 for j, (output, conf) in enumerate(zip(outputs, confs)):
                     bboxes = output[0:4]
@@ -360,7 +367,6 @@ def track(msg):
                     annotator.box_label(bboxes, label, color=colors(c, True))
                 
                 vis_finish = time.time()
-                ### Do this part whenever counter length over 6 ###
                 ###### Trajectory code #####
                 if len(frame_counter) == 6:
                     frame_counter.pop(0)

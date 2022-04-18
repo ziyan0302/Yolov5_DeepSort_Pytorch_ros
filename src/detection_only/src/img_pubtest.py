@@ -15,9 +15,22 @@ import pdb
 
 def img_list(img_folder):
     file_list = []
-    for f in listdir(img_folder):
+    img_name_list = []
+    for image in listdir(img_folder):
+        img_name = int(image.split('.')[0])
+    #     while len(img_name) != 4:
+    #         img_name = '0' + img_name
+        img_name_list.append(img_name)
+    # pdb.set_trace()
+    img_name_list = sorted(img_name_list)
+    for n in img_name_list:
+        f = str(n) + '.png'
         if isfile(join(img_folder, f)):
             file_list.append(join(img_folder, f))
+    # for f in listdir(img_folder):
+    #     if isfile(join(img_folder, f)):
+    #         file_list.append(join(img_folder, f))
+    # pdb.set_trace()
     return file_list
     
 
@@ -26,10 +39,12 @@ if __name__ == '__main__':
     try:
         rospy.init_node('img_test_node', anonymous=False)
         
-        freq = 2
+        freq = 30
         timer = rospy.timer.Rate(freq)
-        source_folder = "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less"
+        # source_folder = "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less"
+        source_folder = "/home/ziyan/Downloads/exp3"
         img_list = img_list(source_folder)
+        pdb.set_trace()
         img_pub = rospy.Publisher('raw_image', Image, queue_size=1)
         br = CvBridge()
         n = len(img_list)
