@@ -16,6 +16,12 @@ catkin_make
 roscore
 source devel/setup.bash
 ```
+
+roslaunch realseanse camera:
+```
+roslaunch realsense2_camera rs_camera.launch color_width:=1280 color_height:=720 color_fps:=30
+```
+
 To rosrun Yolov5 detection node:
 ```
 rosrun detection_only det_only_v3.py 
@@ -23,5 +29,13 @@ rosrun detection_only det_only_v3.py
 
 To rosrun DeepSort tracking node:
 ```
-rosrun detection_only track_only_v2.py --source /home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less/ --save-img
+rosrun detection_only track_only_final.py 
+rosrun detection_only track_only_final.py --save-img
 ```
+
+# Topics
+ Topics                  | Publisher      | Subscriber 
+-------------------------| ---------------|------------------------
+ /camera/color/image_raw | realsense_node | detection_node 
+ /det_result             | detection_node | tracking_node
+ /track_result           | tracking_node  |

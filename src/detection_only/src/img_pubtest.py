@@ -42,7 +42,7 @@ if __name__ == '__main__':
         freq = 30
         timer = rospy.timer.Rate(freq)
         # source_folder = "/home/ziyan/Yolov5_DeepSort_Pytorch_ros/Yolov5_DeepSort_Pytorch/test_imgs_less"
-        source_folder = "/home/ziyan/Downloads/exp3"
+        source_folder = "/home/ziyan/Downloads/exp1"
         img_list = img_list(source_folder)
         pdb.set_trace()
         img_pub = rospy.Publisher('raw_image', Image, queue_size=1)
@@ -51,6 +51,7 @@ if __name__ == '__main__':
         # while not rospy.is_shutdown():
         for i in range(len(img_list)):
             img = cv2.imread(img_list[i])
+            img = img[:,:,[2,1,0]]
             data = Image()
             data = br.cv2_to_imgmsg(img)
             img_pub.publish(data)
