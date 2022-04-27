@@ -32,7 +32,7 @@ from deep_sort.utils.parser import get_config
 import pdb
 from deep_sort.deep_sort import DeepSort
 import rospy
-from detection_only.msg import Bbox_6, Bbox6Array, Track_6, Track6Array
+from detection_only.msg import Bbox6Array, Track_6
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import json
@@ -105,13 +105,12 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
 
     #index = 0
     disappear_id = {}
-    '''
     for i, t in enumerate(frame_counter): # frame_ids
         agent_in_the_frame = t
         # Stop tracking an agent when it does not appear in near frames (forget_frames)
         pop_list = []
         for key, value in tracking_agent.items():
-            if key not in agent_in_the_frame[:, 1]: # ID_list -> !!!
+            if key not in agent_in_the_frame[:, 1]: # ID_list
                 if key not in disappear_id.keys():
                     disappear_id[key] = 1
                 else:
@@ -153,54 +152,7 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
 
                         traj_data[start_frame] = np.concatenate((traj_data[start_frame], new_id_traj)) # new id         
                     tracking_agent[id] = tracking_agent[id][1:]          
-    '''
-    #for i, t in enumerate(frame_counter): # frame_ids
-    agent_in_the_frame = []
-    for f in frame_counter:
-        for a in f:
-            agent_in_the_frame.append(a)
-    # Stop tracking an agent when it does not appear in near frames (forget_frames)
-    pop_list = []
-    for key, value in tracking_agent.items():
-        if key not in agent_in_the_frame[:, 1]: # ID_list -> !!!
-            if key not in disappear_id.keys():
-                disappear_id[key] = 1
-            else:
-                disappear_id[key] += 1
-            if disappear_id[key] >= forget_frames:
-                pop_list.append(key)
-        else:
-            if key not in disappear_id.keys():
-                pass
-            else:
-                disappear_id.pop(key)
-    for key in pop_list:
-        tracking_agent.pop(key)
-    # Start or continuous tracking agents in this frame
-    for agent in agent_in_the_frame:
-        frame = agent[0]
-        id = agent[1]
-        if id not in tracking_agent.keys():
-            tracking_agent[id] = np.expand_dims(agent, axis=0)
-        else:
-            tracking_agent[id] = np.concatenate((tracking_agent[id], np.expand_dims(agent, axis=0)))
-            # Output trajectory data when continuous tracking exceeds 20 frames (predict_len=20)
-            if (tracking_agent[id][-1][0]-tracking_agent[id][0][0]+1) >= predict_len:
-                start_frame = frame
-                frames = np.arange(start_frame, start_frame+predict_len)
-                ids = np.repeat(id, predict_len)
-                x = tracking_agent[id][:][:,2] # past xs
-                y = tracking_agent[id][:][:,3] # past ys
-                parameter = np.polyfit(x, y, 1) # create extrapolate function
-                p = np.poly1d(parameter)
-                xs = np.linspace(x[-1],x[-1]+extra_length*(x[-1]-x[0]), predict_len) # extrapolate 1.5x length of past trajectory
-                ys = p(xs)
-                if start_frame not in traj_data.keys():
-                    traj_data[start_frame] = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
-                else:
-                    new_id_traj = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
-                    traj_data[start_frame] = np.concatenate((traj_data[start_frame], new_id_traj)) # new id         
-                tracking_agent[id] = tracking_agent[id][1:]  
+
         #index += counts[i]
     return traj_data
 
@@ -226,35 +178,7 @@ def traj_diversify(traj_data, n_samples): # Expand the single path into a sector
                 diverse_traj_data[key][i].append(rotated_agent_data)
 
     return diverse_traj_data
-###########
 
-###### Sound signal code #####
-# import socket
-
-# # data settings
-# data_size = 32 # sending 16 bytes = 128 bits (binary touch states, for example)
-
-# # server settings
-# server_name = str([l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1], [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]) # https://stackoverflow.com/a/1267524
-# server_port = 8888
-# server_address = (server_name, server_port)
-
-# # start up server
-# print('Setting up server on:', server_address)
-# server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# server_socket.bind(server_address)
-# server_socket.listen(1)
-
-# # wait for connection
-# print('Waiting for a client connection...')
-# connection, client_address = server_socket.accept()
-# print('Connected to:', client_address)
-
-# # data formatting
-# def data2binary(data):
-# 	return ' '.join([format(ord(i), 'b').zfill(8) for i in data])
-
-#########
 
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -386,24 +310,21 @@ def track(msg):
             ###########
 
             # draw boxes for visualization
-            vis_start = 0
-            vis_finish = 0
             if len(outputs) > 0:
-                vis_start = time.time()
 
-                ###### Trajectory code #####
-                ### Simple way first, for each id that appears in 6 continous frames
-                ### Only the start 6 frames have problem, skip those instead (counter)
-                ### queue and pop 6 frames, while 6 frames, do enumerate, then pop the oldest
-                frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
-                frame_counter.append(frame_traj_data)
-                # pdb.set_trace()
-                #frame += 1
-                if len(frame_counter) == 6:
-                    traj_data = create_traj_data(frame_counter, predict_len, forget)
-                    diverse_traj_data = traj_diversify(traj_data, n_samples=20)
-                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
-                ###########
+                # ###### Trajectory code #####
+                # ### Simple way first, for each id that appears in 6 continous frames
+                # ### Only the start 6 frames have problem, skip those instead (counter)
+                # ### queue and pop 6 frames, while 6 frames, do enumerate, then pop the oldest
+                # frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
+                # frame_counter.append(frame_traj_data)
+                # # pdb.set_trace()
+                # #frame += 1
+                # if len(frame_counter) == 6:
+                #     traj_data = create_traj_data(frame_counter, predict_len, forget)
+                #     diverse_traj_data = traj_diversify(traj_data, n_samples=20)
+                #     annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
+                # ###########
 
                 for j, (output, conf) in enumerate(zip(outputs, confs)):
                     bboxes = output[0:4]
@@ -413,24 +334,18 @@ def track(msg):
                     c = int(cls)  # integer class
                     label = f'{id} {names[c]} {conf:.2f}'
                     annotator.box_label(bboxes, label, color=colors(c, True))
-                
-                vis_finish = time.time()
-                ###### Trajectory code #####
-                if len(frame_counter) == 6:
-                    frame_counter.pop(0)
-                    #print(len(frame_counter))
-                ###########
+
+
+                # ###### Trajectory code #####
+                # if len(frame_counter) == 6:
+                #     frame_counter.pop(0)
+
+                # ###########
                 
 
         else:
             deepsort.increment_ages()
             LOGGER.info('No detections')
-
-        ##### Sound signal code #####
-        # data = connection.recv(data_size)
-        # print('Received', data)
-        # annotator.sound_signal(data)
-        ###########
 
         # Stream results
         im0 = annotator.result()
@@ -450,19 +365,7 @@ def track(msg):
     global track_cost_array
     track_cost_array.append(track_finish - track_start)
     print("tracking cost: ", track_finish - track_start)
-    # print("until output: ", track_outtime - track_start)
-    # print("deepsort cost: ", track_outtime - track_intime)
-    # print("traj cost: ", traj_outtime - traj_intime)
-    # print("vis cost: ", vis_finish - vis_start)
     print("average tracking cost: ", sum(track_cost_array) / len(track_cost_array))
-    # with open('CSVFILE.csv', 'a', newline='') as f_object:  
-    #     # Pass the CSV  file object to the writer() function
-    #     writer_object = writer(f_object)
-    #     # Result - a writer object
-    #     # Pass the data in the list as an argument into the writerow() function
-    #     writer_object.writerow(track_cost_array)  
-    #     # Close the file object
-    #     f_object.close()
     if save_txt or save_vid:
         print('Results saved to %s' % save_path)
         if platform == 'darwin':  # MacOS

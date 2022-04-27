@@ -56,7 +56,7 @@ if __name__ == '__main__':
             data = br.cv2_to_imgmsg(img)
             img_pub.publish(data)
             print("image publish!")
-            # pdb.set_trace()
+            pdb.set_trace()
             timer.sleep()
     except RuntimeError:
         rospy.logfatal("get runtime error")
