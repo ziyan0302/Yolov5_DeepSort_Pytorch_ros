@@ -18,26 +18,22 @@ import time
 from pathlib import Path
 import cv2
 import torch
-import torch.backends.cudnn as cudnn
 
-from yolov5.models.experimental import attempt_load
-from yolov5.utils.downloads import attempt_download
 from yolov5.models.common import DetectMultiBackend
-from yolov5.utils.datasets import LoadImages, LoadStreams
-from yolov5.utils.general import (LOGGER, check_img_size, non_max_suppression, scale_coords, 
+from yolov5.utils.general import (LOGGER, check_img_size, scale_coords, 
                                   check_imshow, xyxy2xywh, increment_path)
-from yolov5.utils.torch_utils import select_device, time_sync
+from yolov5.utils.torch_utils import select_device
 from yolov5.utils.plots import Annotator, colors
 from deep_sort.utils.parser import get_config
 import pdb
 from deep_sort.deep_sort import DeepSort
 import rospy
-from detection_only.msg import Bbox_6, Bbox6Array, Track_6, Track6Array
+from detection_only.msg import Bbox6Array
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import json
 import numpy as np
-from csv import writer
+
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 deepsort root directory
@@ -160,6 +156,7 @@ def create_traj_data(frame_counter, predict_len, forget_frames, frame, extra_len
     return tmp_traj_data
 
 def create_traj_data1(frame_counter, predict_len, forget_frames, extra_length=2.0):  
+    # old version of traj code
     # count frame_id? agent_id?  
     #frame_ids, counts = np.unique(frame_counter[0, :, 0], return_counts=True)
 
@@ -426,11 +423,8 @@ def track(msg):
             # (12,1)
 
             # pass detections to deepsort
-            track_intime = time.time()
             outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
             # x1, y1, x2, y2, ID, cls
-            track_outtime = time.time()
-            # print(outputs)
 
 
             ##### Trajectory code #####
@@ -442,10 +436,7 @@ def track(msg):
             ###########
 
             # draw boxes for visualization
-            vis_start = 0
-            vis_finish = 0
             if len(outputs) > 0:
-                vis_start = time.time()
 
                 ###### Trajectory code #####
                 ### Simple way first, for each id that appears in 6 continous frames
@@ -454,7 +445,6 @@ def track(msg):
                 frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
                 frame_counter.append(frame_traj_data)
                 if len(frame_counter) == 6:
-                    # pdb.set_trace()
                     traj_data = create_traj_data(frame_counter, predict_len, seen, forget)
                     diverse_traj_data = traj_diversify(traj_data, n_samples=20)
                     annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen,(0,0,255))

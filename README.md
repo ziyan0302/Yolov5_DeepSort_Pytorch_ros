@@ -33,6 +33,12 @@ rosrun detection_only track_only_final.py
 rosrun detection_only track_only_final.py --save-img
 ```
 
+To rosrun slim version DeepSort tracking node:
+```
+rosrun detection_only track_only_slim.py 
+rosrun detection_only track_only_slim.py --save-img
+```
+
 # Topics
  Topics                  | Publisher      | Subscriber 
 -------------------------| ---------------|------------------------
