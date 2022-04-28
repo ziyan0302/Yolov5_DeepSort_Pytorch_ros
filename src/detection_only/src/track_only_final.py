@@ -63,11 +63,8 @@ def cleaning_traj_data(tracking_output, frame):
     for e in tracking_output:
         if e[5] == 0:
             tracking_data_ped.append(e)
-    #tracking_data_ped = [e for e in tracking_output if e[5] == 0] # 0: ped, 2: vehicle
-    #pdb.set_trace()
-    #print(tracking_data_ped)
+    # 0: ped, 2: vehicle
     # Delete cls with vehicle
-    # pdb.set_trace()
     traj_data = []
 
     if len(tracking_data_ped) == 0:
@@ -91,9 +88,9 @@ def cleaning_traj_data(tracking_output, frame):
             l.pop(5)
             l.insert(0, frame)
             traj_data.append(l)
-    #print(traj_data) 
 
-    #traj_data = np.array(traj_data)
+
+    # frame, ID, xc, y2, w, h
     return np.array(traj_data)
 
 def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0):  
@@ -105,6 +102,9 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
 
     #index = 0
     disappear_id = {}
+
+
+
     '''
     for i, t in enumerate(frame_counter): # frame_ids
         agent_in_the_frame = t
@@ -159,9 +159,11 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
     for f in frame_counter:
         for a in f:
             agent_in_the_frame.append(a)
+            # pdb.set_trace()
+        
     # Stop tracking an agent when it does not appear in near frames (forget_frames)
     pop_list = []
-    for key, value in tracking_agent.items():
+    for key, _ in tracking_agent.items():
         if key not in agent_in_the_frame[:, 1]: # ID_list -> !!!
             if key not in disappear_id.keys():
                 disappear_id[key] = 1
@@ -174,6 +176,8 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
                 pass
             else:
                 disappear_id.pop(key)
+
+    print(disappear_id)
     for key in pop_list:
         tracking_agent.pop(key)
     # Start or continuous tracking agents in this frame
@@ -189,12 +193,16 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
                 start_frame = frame
                 frames = np.arange(start_frame, start_frame+predict_len)
                 ids = np.repeat(id, predict_len)
-                x = tracking_agent[id][:][:,2] # past xs
-                y = tracking_agent[id][:][:,3] # past ys
+                # y = tracking_agent[id][:][:,3] # past ys
+                # x = tracking_agent[id][:][:,2] # past xs
+                y = tracking_agent[id][:,3] # past ys
+                x = tracking_agent[id][:,2] # past xs
+                # pdb.set_trace()
                 parameter = np.polyfit(x, y, 1) # create extrapolate function
                 p = np.poly1d(parameter)
                 xs = np.linspace(x[-1],x[-1]+extra_length*(x[-1]-x[0]), predict_len) # extrapolate 1.5x length of past trajectory
                 ys = p(xs)
+                # pdb.set_trace()
                 if start_frame not in traj_data.keys():
                     traj_data[start_frame] = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
                 else:
@@ -202,6 +210,10 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
                     traj_data[start_frame] = np.concatenate((traj_data[start_frame], new_id_traj)) # new id         
                 tracking_agent[id] = tracking_agent[id][1:]  
         #index += counts[i]
+    print("tracking_agent: \n",tracking_agent)
+    
+    print("traj_data: \n",traj_data)
+
     return traj_data
 
 thetas = np.linspace(-0.2, 0.2, num=20)
@@ -371,9 +383,9 @@ def track(msg):
             # pass detections to deepsort
             track_intime = time.time()
             outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
+            # x1, y1, x2, y2, ID, cls
             track_outtime = time.time()
             print(outputs)
-            track_result = Track_6()
 
 
             ##### Trajectory code #####
@@ -397,12 +409,13 @@ def track(msg):
                 ### queue and pop 6 frames, while 6 frames, do enumerate, then pop the oldest
                 frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
                 frame_counter.append(frame_traj_data)
-                # pdb.set_trace()
-                #frame += 1
+                print(frame_counter)
+                print(len(frame_counter))
                 if len(frame_counter) == 6:
+                    # pdb.set_trace()
                     traj_data = create_traj_data(frame_counter, predict_len, forget)
                     diverse_traj_data = traj_diversify(traj_data, n_samples=20)
-                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
+                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen,(0,0,255))
                 ###########
 
                 for j, (output, conf) in enumerate(zip(outputs, confs)):

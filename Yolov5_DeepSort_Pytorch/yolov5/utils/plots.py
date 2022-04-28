@@ -128,7 +128,7 @@ class Annotator:
                      (round(positions[t + 1][0]), round(positions[t + 1][1])), \
                      color=(255,255,255), thickness=width, lineType=cv2.LINE_AA)
 
-    def draw_trajectory(self, diverse_traj_data, blur_size, dets, frame_id):
+    def draw_trajectory(self, diverse_traj_data, blur_size, dets, frame_id, color):
         ### Ask ###
         # draw_start = time.time()
         w = dets[:, 2] - dets[:, 0] 
@@ -175,7 +175,7 @@ class Annotator:
             heat = heatmap_layer.copy()
 
             heat[heat>0] = 255
-            traj_mask[heat==255] = (0,0,255)
+            traj_mask[heat==255] = color
             index_y, index_x = np.where(heat == 255)[0], np.where(heat == 255)[1]
             tra_max = -1
             for iy, ix in zip(index_y, index_x):

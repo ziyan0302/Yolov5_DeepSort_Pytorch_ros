@@ -18,21 +18,26 @@ import time
 from pathlib import Path
 import cv2
 import torch
+import torch.backends.cudnn as cudnn
+
+from yolov5.models.experimental import attempt_load
+from yolov5.utils.downloads import attempt_download
 from yolov5.models.common import DetectMultiBackend
-from yolov5.utils.general import (LOGGER, check_img_size, scale_coords, 
+from yolov5.utils.datasets import LoadImages, LoadStreams
+from yolov5.utils.general import (LOGGER, check_img_size, non_max_suppression, scale_coords, 
                                   check_imshow, xyxy2xywh, increment_path)
-from yolov5.utils.torch_utils import select_device
+from yolov5.utils.torch_utils import select_device, time_sync
 from yolov5.utils.plots import Annotator, colors
 from deep_sort.utils.parser import get_config
 import pdb
 from deep_sort.deep_sort import DeepSort
 import rospy
-from detection_only.msg import  Bbox6Array, Track_6
+from detection_only.msg import Bbox_6, Bbox6Array, Track_6, Track6Array
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import json
 import numpy as np
-
+from csv import writer
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # yolov5 deepsort root directory
@@ -54,18 +59,20 @@ def cleaning_traj_data(tracking_output, frame):
     # <-> Original: 
     # frame(0), class(1), ID(2), x1(3), y1(4), w(5), h(6)
     tracking_data_ped = []
-    pdb.set_trace()
+    #pdb.set_trace()
     for e in tracking_output:
         if e[5] == 0:
             tracking_data_ped.append(e)
+    # 0: ped, 2: vehicle
+    # Delete cls with vehicle
     traj_data = []
 
     if len(tracking_data_ped) == 0:
         return np.array(traj_data)
 
-    pdb.set_trace()
     tracking_data_ped = np.delete(tracking_data_ped, 5, axis=1) # frame(timestamp), class, ID, x1, y1, x2, y2
     #tracking_data = tracking_data_ped[:, :4].copy() # frame(timestamp), ID, x1, y1
+    
     # x,y,w,h
     tracking_data_ped[:, 2] = tracking_data_ped[:, 2] - tracking_data_ped[:, 0]
     tracking_data_ped[:, 3] = tracking_data_ped[:, 3] - tracking_data_ped[:, 1]
@@ -73,7 +80,6 @@ def cleaning_traj_data(tracking_output, frame):
     tracking_data_ped[:, 1] = tracking_data_ped[:, 1] + tracking_data_ped[:, 3] #  # frame, ID, xc, y2
     # id move to the front (insert to each list)
     tracking_data_ped_list = tracking_data_ped.tolist()
-    #print(tracking_data_ped_list)
 
     if len(tracking_data_ped) > 0:
         for l in tracking_data_ped_list:
@@ -81,12 +87,79 @@ def cleaning_traj_data(tracking_output, frame):
             l.pop(5)
             l.insert(0, frame)
             traj_data.append(l)
-    #print(traj_data) 
 
-    #traj_data = np.array(traj_data)
+
+    # frame, ID, xc, y2, w, h
     return np.array(traj_data)
 
-def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0):  
+
+
+
+
+def create_traj_data(frame_counter, predict_len, forget_frames, frame, extra_length=2.0):  
+    global tmp_tracking_agent, tmp_disappear_id
+
+    ######## slim version ##########
+    agent_now = []
+    for a in frame_counter[-1]:
+        agent_now.append(a)
+    for agent in agent_now:
+        frame = agent[0]
+        id = agent[1]
+        if id not in tmp_tracking_agent.keys():
+            tmp_tracking_agent[id] = np.expand_dims(agent, axis=0)
+        else:
+            # pdb.set_trace()
+            tmp_tracking_agent[id] = np.concatenate((tmp_tracking_agent[id], np.expand_dims(agent, axis=0)))
+
+    pop = False
+    pop_keys = []
+    for key, track_his in tmp_tracking_agent.items():
+        if len(track_his) == 0:
+            pop = True
+            pop_keys.append(key)
+            continue
+        else:
+            tmp_track_his = []
+            # pdb.set_trace()
+            for his in track_his:
+                if his[0] > frame - 5:
+                    tmp_track_his.append(his)
+            # pdb.set_trace()
+            tmp_tracking_agent[key] = np.array(tmp_track_his)
+    if pop:
+        for key in pop_keys:
+            tmp_tracking_agent.pop(key,None)
+    # print("tmp: \n",tmp_tracking_agent)
+    ######### slim version ##########
+
+
+    ########slim################
+    tmp_traj_data = {}
+    for agent in agent_now:
+        frame = agent[0]
+        id = agent[1]
+        if (tmp_tracking_agent[id][-1][0]-tmp_tracking_agent[id][0][0]+2) >= predict_len:
+            start_traj_frame = frame
+            frames = np.arange(start_traj_frame, start_traj_frame+predict_len)
+            ids = np.repeat(id, predict_len)
+            y = tmp_tracking_agent[id][:,3] # past ys
+            x = tmp_tracking_agent[id][:,2] # past xs
+            parameter = np.polyfit(x, y, 1) # create extrapolate function
+            p = np.poly1d(parameter)
+            xs = np.linspace(x[-1],x[-1]+extra_length*(x[-1]-x[0]), predict_len) # extrapolate 1.5x length of past trajectory
+            ys = p(xs)
+            if start_traj_frame not in tmp_traj_data.keys():
+                tmp_traj_data[start_traj_frame] = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
+            else:
+                tmp_new_id_traj = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
+                tmp_traj_data[start_traj_frame] = np.concatenate((tmp_traj_data[start_traj_frame], tmp_new_id_traj)) # new id  
+    #######slim#################
+
+    # print("tmp_traj_data: \n", tmp_traj_data)
+    return tmp_traj_data
+
+def create_traj_data1(frame_counter, predict_len, forget_frames, extra_length=2.0):  
     # count frame_id? agent_id?  
     #frame_ids, counts = np.unique(frame_counter[0, :, 0], return_counts=True)
 
@@ -95,12 +168,16 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
 
     #index = 0
     disappear_id = {}
+
+
+
+    '''
     for i, t in enumerate(frame_counter): # frame_ids
         agent_in_the_frame = t
         # Stop tracking an agent when it does not appear in near frames (forget_frames)
         pop_list = []
         for key, value in tracking_agent.items():
-            if key not in agent_in_the_frame[:, 1]: # ID_list
+            if key not in agent_in_the_frame[:, 1]: # ID_list -> !!!
                 if key not in disappear_id.keys():
                     disappear_id[key] = 1
                 else:
@@ -142,9 +219,79 @@ def create_traj_data(frame_counter, predict_len, forget_frames, extra_length=2.0
 
                         traj_data[start_frame] = np.concatenate((traj_data[start_frame], new_id_traj)) # new id         
                     tracking_agent[id] = tracking_agent[id][1:]          
+    '''
+    #for i, t in enumerate(frame_counter): # frame_ids
+    agent_in_the_frame = []
+    for f in frame_counter:
+        for a in f:
+            agent_in_the_frame.append(a)
+            # pdb.set_trace()
+        
+    # Stop tracking an agent when it does not appear in near frames (forget_frames)
+    pop_list = []
+    for key, _ in tracking_agent.items():
+        if key not in agent_in_the_frame[:, 1]: # ID_list -> !!!
+            if key not in disappear_id.keys():
+                disappear_id[key] = 1
+            else:
+                disappear_id[key] += 1
+            if disappear_id[key] >= forget_frames:
+                pop_list.append(key)
+        else:
+            if key not in disappear_id.keys():
+                pass
+            else:
+                disappear_id.pop(key)
 
+    print(disappear_id)
+    for key in pop_list:
+        tracking_agent.pop(key)
+    # Start or continuous tracking agents in this frame
+    for agent in agent_in_the_frame:
+        frame = agent[0]
+        id = agent[1]
+        if id not in tracking_agent.keys():
+            tracking_agent[id] = np.expand_dims(agent, axis=0)
+        else:
+            tracking_agent[id] = np.concatenate((tracking_agent[id], np.expand_dims(agent, axis=0)))
+            # Output trajectory data when continuous tracking exceeds 20 frames (predict_len=20)
+            if (tracking_agent[id][-1][0]-tracking_agent[id][0][0]+1) >= predict_len:
+                start_frame = frame
+                frames = np.arange(start_frame, start_frame+predict_len)
+                ids = np.repeat(id, predict_len)
+                # y = tracking_agent[id][:][:,3] # past ys
+                # x = tracking_agent[id][:][:,2] # past xs
+                y = tracking_agent[id][:,3] # past ys
+                x = tracking_agent[id][:,2] # past xs
+                # pdb.set_trace()
+                parameter = np.polyfit(x, y, 1) # create extrapolate function
+                p = np.poly1d(parameter)
+                xs = np.linspace(x[-1],x[-1]+extra_length*(x[-1]-x[0]), predict_len) # extrapolate 1.5x length of past trajectory
+                ys = p(xs)
+                # pdb.set_trace()
+                if start_frame not in traj_data.keys():
+                    traj_data[start_frame] = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
+                else:
+                    new_id_traj = np.expand_dims(np.transpose(np.stack((frames, ids, xs, ys)), (1,0)), axis=0)
+                    traj_data[start_frame] = np.concatenate((traj_data[start_frame], new_id_traj)) # new id         
+                tracking_agent[id] = tracking_agent[id][1:]  
         #index += counts[i]
+    print("tracking_agent: \n",tracking_agent)
+    tmp_tracking_agent = tracking_agent
+    for key, track_his in tmp_tracking_agent.items():
+        tmp_track_his = []
+        if track_his == []:
+            tracking_agent.pop(key,None)
+        else:
+            for his in track_his:
+                if his[0] > seen - 5:
+                    tmp_track_his.append(his)
+            track_his = tmp_track_his
+
+    print("tmp: \n",tmp_tracking_agent)
+
     return traj_data
+
 
 thetas = np.linspace(-0.2, 0.2, num=20)
 def traj_diversify(traj_data, n_samples): # Expand the single path into a sector
@@ -168,7 +315,6 @@ def traj_diversify(traj_data, n_samples): # Expand the single path into a sector
                 diverse_traj_data[key][i].append(rotated_agent_data)
 
     return diverse_traj_data
-
 
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -234,13 +380,10 @@ def track(msg):
     
     pred = [torch.FloatTensor(pred).to(device)]
 
-    print("\033[92mpred shape: %d\033[0m" % (len(pred[0])))
     
     path = str(img_idx) + ".jpg"
     # Read image
-    # cv_image = cv_image.transpose(2,1,0)
     im0s = cv_image[:,:,[2,1,0]]
-    # pdb.set_trace()
 
     # Padded resize
     img_size = 640
@@ -285,15 +428,14 @@ def track(msg):
             # pass detections to deepsort
             track_intime = time.time()
             outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss.cpu(), im0)
+            # x1, y1, x2, y2, ID, cls
             track_outtime = time.time()
-            print(outputs)
-            track_result = Track_6()
+            # print(outputs)
 
 
             ##### Trajectory code #####
             predict_len = 6
             forget = 3 
-            #frame_counter = []
             traj_data = []
             diverse_traj_data = []
             blur_size = 3
@@ -309,15 +451,13 @@ def track(msg):
                 ### Simple way first, for each id that appears in 6 continous frames
                 ### Only the start 6 frames have problem, skip those instead (counter)
                 ### queue and pop 6 frames, while 6 frames, do enumerate, then pop the oldest
-                pdb.set_trace()
                 frame_traj_data = cleaning_traj_data(outputs, seen) # seen is frame here
                 frame_counter.append(frame_traj_data)
-                # pdb.set_trace()
-                #frame += 1
                 if len(frame_counter) == 6:
-                    traj_data = create_traj_data(frame_counter, predict_len, forget)
+                    # pdb.set_trace()
+                    traj_data = create_traj_data(frame_counter, predict_len, seen, forget)
                     diverse_traj_data = traj_diversify(traj_data, n_samples=20)
-                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen)
+                    annotator.draw_trajectory(diverse_traj_data, blur_size, outputs, seen,(0,0,255))
                 ###########
 
                 for j, (output, conf) in enumerate(zip(outputs, confs)):
@@ -333,7 +473,6 @@ def track(msg):
                 ###### Trajectory code #####
                 if len(frame_counter) == 6:
                     frame_counter.pop(0)
-                    #print(len(frame_counter))
                 ###########
                 
 
@@ -341,11 +480,6 @@ def track(msg):
             deepsort.increment_ages()
             LOGGER.info('No detections')
 
-        ##### Sound signal code #####
-        # data = connection.recv(data_size)
-        # print('Received', data)
-        # annotator.sound_signal(data)
-        ###########
 
         # Stream results
         im0 = annotator.result()
@@ -365,19 +499,8 @@ def track(msg):
     global track_cost_array
     track_cost_array.append(track_finish - track_start)
     print("tracking cost: ", track_finish - track_start)
-    # print("until output: ", track_outtime - track_start)
-    # print("deepsort cost: ", track_outtime - track_intime)
-    # print("traj cost: ", traj_outtime - traj_intime)
-    # print("vis cost: ", vis_finish - vis_start)
     print("average tracking cost: ", sum(track_cost_array) / len(track_cost_array))
-    # with open('CSVFILE.csv', 'a', newline='') as f_object:  
-    #     # Pass the CSV  file object to the writer() function
-    #     writer_object = writer(f_object)
-    #     # Result - a writer object
-    #     # Pass the data in the list as an argument into the writerow() function
-    #     writer_object.writerow(track_cost_array)  
-    #     # Close the file object
-    #     f_object.close()
+
     if save_txt or save_vid:
         print('Results saved to %s' % save_path)
         if platform == 'darwin':  # MacOS
@@ -525,13 +648,16 @@ if __name__ == '__main__':
     # trajectory 
     global frame_counter
     frame_counter = []
+    global tmp_tracking_agent, tmp_disappear_id
+    tmp_tracking_agent = {}
+    tmp_disappear_id = {}
 
     try:
         while not rospy.is_shutdown():
-            rospy.init_node('tracking_node_v2', anonymous=False)
+            rospy.init_node('tracking_node_slim', anonymous=False)
             rate = rospy.Rate(10)
             det_sub = rospy.Subscriber('det_result', Bbox6Array, det_cb, opt, queue_size=1)
-            track_pub = rospy.Publisher('track_result', Image, queue_size=1)
+            track_pub = rospy.Publisher('track_result_slim', Image, queue_size=1)
             
 
             rate.sleep()
